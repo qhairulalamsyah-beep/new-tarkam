@@ -22,8 +22,8 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://idolmeta.fun"),
-  title: "TARKAM — Turnamen Idol Meta Indonesia",
-  description: "Komunitas Idol Meta Indonesia. Turnamen dance rhythm mingguan, leaderboard, MVP, Sultan of the Week, dan komunitas terbesar. Gabung sekarang!",
+  title: "TARKAM — Fan Made Edition",
+  description: "Komunitas Idol Meta Indonesia, turnamen tarkam mingguan cowo dan cewe, yuk ramaikan dan gabung sekarang!",
   manifest: "/manifest.json",
   icons: {
     icon: "/logo1.webp",
@@ -36,8 +36,8 @@ export const metadata: Metadata = {
 
   // ── Open Graph (defaults — page.tsx generateMetadata overrides these) ──
   openGraph: {
-    title: "TARKAM — Turnamen Idol Meta Indonesia",
-    description: "Komunitas Idol Meta Indonesia. Turnamen dance rhythm mingguan, leaderboard, MVP, Sultan of the Week, dan komunitas terbesar. Gabung sekarang!",
+    title: "TARKAM — Fan Made Edition",
+    description: "Komunitas Idol Meta Indonesia, turnamen tarkam mingguan cowo dan cewe, yuk ramaikan dan gabung sekarang!",
     url: "https://idolmeta.fun",
     siteName: "TARKAM IDM",
     locale: "id_ID",
@@ -49,7 +49,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
   },
 
-  keywords: ["TARKAM", "IDM", "Idol Meta", "turnamen", "dance", "rhythm", "komunitas", "leaderboard", "MVP"],
+  keywords: ["TARKAM", "IDM", "Idol Meta", "Fan Made", "turnamen", "tarkam", "cowo", "cewe", "komunitas", "mingguan"],
 };
 
 export const viewport: Viewport = {

@@ -1,7 +1,7 @@
 {
-  "name": "TARKAM IDM — Idol Meta",
-  "short_name": "TARKAM IDM",
-  "description": "Komunitas Tarkam IDM — kompetisi dance, klasemen, turnamen mingguan, dan lebih banyak! Idol Meta Fan Made Edition.",
+  "name": "TARKAM — Fan Made Edition",
+  "short_name": "TARKAM",
+  "description": "Komunitas Idol Meta Indonesia, turnamen tarkam mingguan cowo dan cewe, yuk ramaikan dan gabung sekarang!",
   "start_url": "/",
   "display": "standalone",
   "orientation": "portrait",

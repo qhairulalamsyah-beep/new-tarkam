@@ -20,7 +20,7 @@
 
 import { ImageResponse } from 'next/og'
 
-export const alt = 'TARKAM — Turnamen Idol Meta Indonesia'
+export const alt = 'TARKAM — Fan Made Edition'
 export const size = { width: 1200, height: 630 }
 export const contentType = 'image/png'
 
