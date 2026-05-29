@@ -97,7 +97,8 @@ export function HeroSection({
   const [showBracketPicker, setShowBracketPicker] = useState(false);
 
   /* ─── YouTube iframe facade — defer loading until after LCP ─── */
-  // ★ OPTIMIZED: Disable YouTube on mobile entirely — heavy JS (500KB+) blocks main thread causing high INP
+  // ★ YouTube loads on both mobile & desktop, but with longer delay on mobile
+  // to avoid blocking LCP. Mobile: 8s delay, Desktop: 5s delay.
   const isMobile = useSyncExternalStore(
     (callback) => {
       const mql = window.matchMedia('(max-width: 767px)');
@@ -109,11 +110,10 @@ export function HeroSection({
   );
   const [ytIframeReady, setYtIframeReady] = useState(false);
   useEffect(() => {
-    // Defer YouTube iframe load — 5s on desktop (was 3s), skip on mobile
-    if (!isMobile) {
-      const timer = setTimeout(() => setYtIframeReady(true), 5000);
-      return () => clearTimeout(timer);
-    }
+    // Defer YouTube iframe load — longer delay on mobile for better LCP
+    const delay = isMobile ? 8000 : 5000;
+    const timer = setTimeout(() => setYtIframeReady(true), delay);
+    return () => clearTimeout(timer);
   }, [isMobile]);
 
   /* ─── Compute stats ─── */
@@ -176,7 +176,7 @@ export function HeroSection({
         />
 
         {/* CMS Video Background — takes priority over images when set */}
-        {heroBgVideo && !isMobile ? (
+        {heroBgVideo ? (
           (() => {
             // Detect YouTube URL and extract video ID + optional start time
             const ytMatch = heroBgVideo.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
@@ -185,10 +185,29 @@ export function HeroSection({
 
             if (ytMatch) {
               // YouTube embed — deferred facade: only load iframe AFTER LCP completes
-              // This prevents YouTube's heavy JS from blocking initial paint
+              // ★ Shows banner image as placeholder while iframe loads (both mobile & desktop)
+              // Mobile delay: 8s, Desktop delay: 5s
               return (
                 <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                  {ytIframeReady ? (
+                  {/* Banner image as placeholder — shows immediately while video loads */}
+                  {!ytIframeReady && (heroBgDesktop || heroBgMobile) && (
+                    <>
+                      {heroBgDesktop && (
+                        <div className="absolute inset-0 hidden sm:block">
+                          <Image src={heroBgDesktop} alt="" fill priority sizes="100vw" className="object-cover opacity-65" aria-hidden="true" />
+                        </div>
+                      )}
+                      {(heroBgMobile || heroBgDesktop) && (
+                        <div className="absolute inset-0 sm:hidden">
+                          <Image src={heroBgMobile || heroBgDesktop} alt="" fill priority sizes="(max-width: 640px) 100vw, 640px" className="object-cover object-center opacity-65" aria-hidden="true" />
+                        </div>
+                      )}
+                    </>
+                  )}
+                  {!ytIframeReady && !(heroBgDesktop || heroBgMobile) && (
+                    <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, var(--bg-deep) 0%, var(--bg-mid) 40%, var(--background) 100%)' }} />
+                  )}
+                  {ytIframeReady && (
                     <div className="absolute inset-0" style={{ width: '177.78vh', height: '56.25vw', minWidth: '100%', minHeight: '100%', left: '50%', top: '50%', transform: 'translate(-50%, -50%)' }}>
                       <iframe
                         src={`https://www.youtube.com/embed/${ytMatch[1]}?autoplay=1&mute=1&loop=1&playlist=${ytMatch[1]}&controls=0&showinfo=0&rel=0&modestbranding=1&playsinline=1&disablekb=1&fs=0&iv_load_policy=3${startTime}`}
@@ -199,14 +218,11 @@ export function HeroSection({
                         aria-hidden="true"
                       />
                     </div>
-                  ) : (
-                    /* Placeholder — static dark gradient while iframe loads */
-                    <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, var(--bg-deep) 0%, var(--bg-mid) 40%, var(--background) 100%)' }} />
                   )}
                 </div>
               );
             }
-            // Direct video URL (MP4, WebM, etc.)
+            // Direct video URL (MP4, WebM, etc.) — works on both mobile & desktop
             return (
               <div className="absolute inset-0 overflow-hidden pointer-events-none">
                 <video
