@@ -27,7 +27,7 @@ export const metadata: Metadata = {
   manifest: "/manifest.json",
   icons: {
     icon: "/logo1.webp",
-    apple: "/og-banner.webp",
+    apple: "/logo1.webp",
   },
   other: {
     "apple-mobile-web-app-capable": "yes",
