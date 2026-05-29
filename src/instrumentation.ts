@@ -1,0 +1,84 @@
+// ─── Next.js Instrumentation — Process-level setup ───
+// This file runs ONCE when the Next.js server process starts.
+// 1. Map Vercel Integration env vars to standard names
+// 2. Register global error handlers to prevent crashes
+
+export async function register() {
+  // Only run on server side
+  if (process.env.NEXT_RUNTIME === 'nodejs') {
+    // ═══════════════════════════════════════════════════════════
+    // ENSURE DATABASE_URL IS SET (Neon PostgreSQL)
+    // ═══════════════════════════════════════════════════════════
+    // Turbopack may not load .env before Prisma validates the datasource.
+    // We force-set it here to guarantee Prisma can connect.
+    const NEON_URL = 'postgresql://neondb_owner:npg_i6O1uYUDmyZS@ep-dry-waterfall-aofsy5ty-pooler.c-2.ap-southeast-1.aws.neon.tech/neondb?sslmode=require';
+    if (!process.env.DATABASE_URL) {
+      process.env.DATABASE_URL = NEON_URL;
+      console.log('[instrumentation] Set DATABASE_URL from hardcoded Neon URL');
+    } else {
+      console.log('[instrumentation] DATABASE_URL already set:', process.env.DATABASE_URL.substring(0, 30) + '...');
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // Guard 1: uncaughtException
+    // ═══════════════════════════════════════════════════════════
+    // An uncaught exception in a route handler or middleware would normally
+    // crash the Node.js process. We catch it here, log it, and keep the
+    // server alive. The individual request still fails, but the server
+    // continues serving other requests.
+    process.on('uncaughtException', (error) => {
+      // PrismaClientInitializationError = bad DB connection config
+      // These should NOT crash the server — just log and continue.
+      const errorName = error.constructor?.name || 'Error';
+      const isPrismaInit = errorName === 'PrismaClientInitializationError';
+      const isPrismaValidation = errorName === 'PrismaClientValidationError';
+
+      if (isPrismaInit || isPrismaValidation) {
+        console.error(
+          `[instrumentation] ⚠ Prisma error (non-fatal): ${error.message}\n` +
+          `  DB-dependent routes will fail until DATABASE_URL is fixed.\n` +
+          `  Server process stays alive for static/client-side pages.`
+        );
+        // DO NOT re-throw — keep the server alive
+        return;
+      }
+
+      // For truly unexpected errors, log but still don't crash
+      // (the double-fork guardian will restart if the process becomes unresponsive)
+      console.error(
+        `[instrumentation] ⚠ Uncaught exception (non-fatal):\n` +
+        `  ${error.message}\n` +
+        `  Stack: ${error.stack?.split('\n').slice(0, 3).join('\n  ')}`
+      );
+      // DO NOT re-throw — keep the server alive
+    });
+
+    // ═══════════════════════════════════════════════════════════
+    // Guard 2: unhandledRejection
+    // ═══════════════════════════════════════════════════════════
+    // An unhandled Promise rejection (e.g., from an async route handler)
+    // would crash the process in Node.js 15+. We catch it here.
+    process.on('unhandledRejection', (reason) => {
+      const reasonStr = reason instanceof Error
+        ? `${reason.constructor?.name}: ${reason.message}`
+        : String(reason);
+
+      // Prisma initialization errors are expected when DB is misconfigured
+      if (reasonStr.includes('PrismaClient') || reasonStr.includes('datasource')) {
+        console.error(
+          `[instrumentation] ⚠ Unhandled Prisma rejection (non-fatal): ${reasonStr}\n` +
+          `  Server process stays alive.`
+        );
+        return;
+      }
+
+      console.error(
+        `[instrumentation] ⚠ Unhandled rejection (non-fatal): ${reasonStr}\n` +
+        `  Server process stays alive.`
+      );
+      // DO NOT exit — keep the server alive
+    });
+
+    console.log('[instrumentation] ✓ Process error guards registered (double-fork resilient mode)');
+  }
+}
