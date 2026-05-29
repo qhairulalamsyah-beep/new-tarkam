@@ -35,8 +35,8 @@ function isRateLimited(ip: string): boolean {
   return false;
 }
 
-// Pre-computed CSP header — Cloudinary for images, Vercel Analytics for scripts
-const CSP_HEADER = "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://va.vercel-scripts.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https://res.cloudinary.com; media-src 'self' https://res.cloudinary.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://res.cloudinary.com https://api.cloudinary.com https://va.vercel-scripts.com; frame-src https://www.youtube.com https://youtube.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none';";
+// Pre-computed CSP header — Cloudinary for images, Vercel Analytics for scripts, Pusher for real-time
+const CSP_HEADER = "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://va.vercel-scripts.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https:; media-src 'self' https://res.cloudinary.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://res.cloudinary.com https://api.cloudinary.com https://va.vercel-scripts.com wss://ws-ap1.pusherapp.com https://sockjs-ap1.pusher.com; frame-src https://www.youtube.com https://youtube.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none';";
 
 export function middleware(request: NextRequest) {
   // ── Step 1: Security headers for ALL responses ──
