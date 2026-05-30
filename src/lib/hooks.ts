@@ -107,8 +107,6 @@ import {
   getPredictionLeaderboard,
   getLeaderboardHistory,
   getReferralCode,
-  generateReferralCode,
-  useReferralCode,
   getReferralStats,
   getWaNotifPreferences,
   getWaNotifLog,

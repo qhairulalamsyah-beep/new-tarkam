@@ -9,7 +9,8 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { useReferralStats, generateReferralCode } from '@/lib/hooks';
+import { useReferralStats } from '@/lib/hooks';
+import { generateReferralCode } from '@/lib/queries/misc';
 import { useAppStore } from '@/lib/store';
 
 // Reward tiers definition

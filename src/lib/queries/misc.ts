@@ -289,7 +289,7 @@ export async function generateReferralCode() {
 }
 
 // ── POST /api/referrals/use — Use a referral code ──
-export async function useReferralCode(data: { code: string; referredAccountId?: string; referredEmail?: string }) {
+export async function applyReferralCode(data: { code: string; referredAccountId?: string; referredEmail?: string }) {
   const response = await fetch('/api/referrals/use', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
