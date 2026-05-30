@@ -853,7 +853,7 @@ export function LandingPage() {
           className={`w-12 h-12 rounded-full shadow-lg flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer bg-idm-gold-warm/90 shadow-idm-gold-warm/30 ${fabOpen ? 'rotate-45' : ''}`}
           title="Menu lainnya"
         >
-          <span className="text-lg text-black">{fabOpen ? '✕' : '⋯'}</span>
+          <span className="text-lg text-black">{fabOpen ? '✖️' : '⚡'}</span>
         </button>
       </div>
 
