@@ -90,12 +90,12 @@ Pastikan mendaftar sebelum batas waktu pendaftaran ditutup! Status pendaftaran b
     id: 'umum-5',
     category: 'umum',
     question: 'Apakah gratis?',
-    answer: `Ya, berpartisipasi di turnamen Tarkam IDM <strong>100% gratis!</strong> Kamu tidak perlu membayar biaya pendaftaran apapun.
+    answer: `Ya, berpartisipasi di turnamen Tarkam IDM maunya panitia sih <strong>100% gratis!</strong> Kamu tidak perlu membayar biaya pendaftaran apapun.
 
-Namun, ada fitur opsional seperti:
+Namun, karna tidak ada sponsor maka dikenakan biaya pendaftaran sebesar yang telah disepakati panitia dan ada fitur opsional seperti:
 <ul class="list-disc pl-5 mt-2 space-y-1">
 <li><strong>Sawer / Donasi</strong> — Kamu bisa menyumbang untuk menambah hadiah turnamen dan mendapatkan badge eksklusif</li>
-<li><strong>Sponsor</strong> — Sponsor bisa memberikan hadiah tambahan untuk turnamen</li>
+<li><strong>Mudah2an kedepanya ada sponsor</strong> — Sponsor bisa memberikan hadiah tambahan untuk turnamen</li>
 </ul>
 
 Donasi bersifat sukarela dan tidak mempengaruhi hasil pertandingan.`,
