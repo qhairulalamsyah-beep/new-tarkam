@@ -2,14 +2,15 @@
 
 import Image from 'next/image';
 import { AvatarMedia } from '@/components/ui/avatar-media';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion } from 'framer-motion';
 import {
-  ArrowLeft, X, Trophy, Flame, Crown, Shield, Target,
+  ArrowLeft, X, Trophy, Flame, Crown, Shield,
   TrendingUp, Award, Calendar, Star, BarChart3,
-  Activity, MapPin, Users, Swords, ChevronDown, ChevronUp
+  Activity, MapPin, Users, Swords, ChevronDown, ChevronUp,
+  Smartphone, Pencil, Loader2
 } from 'lucide-react';
 import { SkinBadgesRow, SkinName } from './skin-renderer';
 import { getPrimarySkin, resolveSkinColors, getSkinTwinkle, sortSkinsByPriority, filterActiveSkins } from '@/lib/skin-utils';
@@ -29,6 +30,8 @@ import { ClubLogoImage } from './club-logo-image';
 import { TierProgress } from './ui/tier-progress';
 import { WaNotifPreferences } from './wa-notif-preferences';
 import { ReferralSection } from './referral-section';
+import { CloudinaryPicker } from './cloudinary-picker';
+import { toast } from 'sonner';
 import dynamic from 'next/dynamic';
 
 // Lazy load performance charts — heavy Recharts dependency
@@ -163,6 +166,8 @@ function StatBlock({ icon: Icon, label, value, sub, color, highlight, size = 'no
 export function PlayerProfile({ player, onClose, rank, skinMap, preferredSkinType }: PlayerProfileProps) {
   const storeDivision = useAppStore(s => s.division);
   const playerAuth = useAppStore(s => s.playerAuth);
+  const adminAuth = useAppStore(s => s.adminAuth);
+  const isAdmin = adminAuth.isAuthenticated;
   // Use the PLAYER's actual division, NOT the currently selected UI division
   // This prevents showing "Divisi Male" when viewing a female player's profile
   const playerDivision = player.division || storeDivision;
@@ -171,6 +176,7 @@ export function PlayerProfile({ player, onClose, rank, skinMap, preferredSkinTyp
   const dt = getDivisionTheme(playerDivision as 'male' | 'female');
 
   // ═══ Auto-enrich player data from API ═══
+  const qc = useQueryClient();
   // Many callers pass incomplete data (matches: 0, weekly stats instead of totals, etc.)
   // Always fetch authoritative data from the player API so the modal shows correct
   // winrate/stats regardless of what the caller passes. Uses 60s cache to avoid
@@ -283,6 +289,31 @@ export function PlayerProfile({ player, onClose, rank, skinMap, preferredSkinTyp
 
   const [showAllMatches, setShowAllMatches] = useState(false);
   const MATCH_LIMIT = 10;
+
+  // ═══ OS Image State ═══
+  const osImage = (enrichedPlayerData as Record<string, unknown> | undefined)?.osImage as string | null | undefined ?? null;
+  const [showOsPicker, setShowOsPicker] = useState(false);
+  const [isSavingOs, setIsSavingOs] = useState(false);
+
+  const handleSaveOsImage = async (url: string) => {
+    setIsSavingOs(true);
+    try {
+      const res = await fetch(`/api/players/${player.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ osImage: url }),
+      });
+      if (!res.ok) throw new Error('Gagal menyimpan OS image');
+      toast.success('OS image berhasil disimpan!');
+      // Invalidate the player detail query so enriched data refreshes
+      qc.invalidateQueries({ queryKey: ['player-detail', player.id] });
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Gagal menyimpan OS image');
+    } finally {
+      setIsSavingOs(false);
+    }
+  };
 
   // ═══ Compute accurate W/L from actual match records ═══
   // The Player record's totalWins/matches are denormalized counters that can drift
@@ -672,7 +703,35 @@ export function PlayerProfile({ player, onClose, rank, skinMap, preferredSkinTyp
             {/* ═══ Main Stats Grid — Dance Tournament HUD Style ═══ */}
             <div className="grid grid-cols-4 gap-2 mb-4">
               <StatBlock icon={Trophy} label="Poin" value={points} color={dt.text} highlight size="large" playerDivision={playerDivision as 'male' | 'female'} />
-              <StatBlock icon={Target} label="Win Rate" value={`${winRate}%`} sub={`${displayWins}W/${displayLosses}L`} color="text-green-500" playerDivision={playerDivision as 'male' | 'female'} />
+              {/* ═══ OS Stat Block — replaces Win Rate in top grid ═══ */}
+              <div className={`relative rounded-2xl p-3 text-center transition-all overflow-hidden bg-muted/10 border border-border/10`}>
+                <div className="relative z-10">
+                  <Smartphone className="w-4 h-4 text-purple-400 mx-auto mb-1.5" />
+                  {osImage ? (
+                    <div className="relative w-full h-12 mx-auto mb-1 rounded-md overflow-hidden">
+                      <Image src={osImage} alt="OS" fill sizes="80px" className="object-contain" unoptimized />
+                    </div>
+                  ) : (
+                    <p className="text-lg font-black text-muted-foreground/50">—</p>
+                  )}
+                  <p className="text-[9px] text-muted-foreground uppercase tracking-widest font-semibold">OS</p>
+                </div>
+                {/* Admin edit button */}
+                {isAdmin && (
+                  <button
+                    onClick={() => setShowOsPicker(true)}
+                    disabled={isSavingOs}
+                    className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-primary/20 hover:bg-primary/40 flex items-center justify-center transition-colors z-20"
+                    title="Edit OS image"
+                  >
+                    {isSavingOs ? (
+                      <Loader2 className="w-3 h-3 text-primary animate-spin" />
+                    ) : (
+                      <Pencil className="w-2.5 h-2.5 text-primary" />
+                    )}
+                  </button>
+                )}
+              </div>
               <StatBlock icon={Crown} label="MVP" value={totalMvp} sub={`${mvpRate}% rasio`} color="text-yellow-500" playerDivision={playerDivision as 'male' | 'female'} />
               <StatBlock icon={Activity} label="Match" value={displayMatches} color="text-blue-400" playerDivision={playerDivision as 'male' | 'female'} />
             </div>
@@ -1203,6 +1262,18 @@ export function PlayerProfile({ player, onClose, rank, skinMap, preferredSkinTyp
               />
             </div>
           )}
+
+          {/* ═══ Cloudinary Picker for OS Image ═══ */}
+          <CloudinaryPicker
+            open={showOsPicker}
+            onClose={() => setShowOsPicker(false)}
+            onSelect={(url) => {
+              handleSaveOsImage(url);
+              setShowOsPicker(false);
+            }}
+            currentImage={osImage}
+            uploadFolder="idm/os"
+          />
           </div>
       </div>
     </div>

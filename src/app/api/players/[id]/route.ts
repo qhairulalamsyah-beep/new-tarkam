@@ -86,6 +86,7 @@ export async function PUT(
     if (body.city !== undefined) updateData.city = body.city;
     if (body.phone !== undefined) updateData.phone = normalizePhone(body.phone);
     if (body.joki !== undefined) updateData.joki = body.joki;
+    if (body.osImage !== undefined) updateData.osImage = body.osImage;
     if (body.division !== undefined) updateData.division = body.division;
   } else if (player) {
     // Player can only update their OWN profile, and only safe fields
