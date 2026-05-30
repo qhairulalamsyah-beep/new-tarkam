@@ -308,6 +308,155 @@ function PlayerFullCard({
 
 
 /* ═══════════════════════════════════════════
+   Ghost Player Full Card — Empty state skeleton
+   Matches the layout of PlayerFullCard but with
+   skeleton placeholders and muted styling.
+   ═══════════════════════════════════════════ */
+
+function GhostPlayerFullCard({ division }: { division: DivisionKey }) {
+  const config = DIVISION_CONFIG[division];
+  const divisionHex = config.hex;
+  const divisionLabel = config.label;
+  const dt = getDivisionTheme(division);
+
+  const ghostStats = [
+    { label: 'Points', barBg: division === 'male' ? 'bg-idm-male/30' : 'bg-idm-female/30', width: '75%' },
+    { label: 'Wins', barBg: 'bg-idm-gold-warm/30', width: '60%' },
+    { label: 'Losses', barBg: 'bg-red-700/30', width: '40%' },
+    { label: 'Matches', barBg: 'bg-emerald-500/30', width: '55%' },
+    { label: 'MVP', barBg: 'bg-orange-500/30', width: '30%' },
+  ];
+
+  return (
+    <div className={`flex-1 ${dt.casinoCard} overflow-hidden relative opacity-50`} style={{ borderRadius: '28px' }}>
+      <div className={dt.casinoBar} />
+
+      {/* Division accent line at top */}
+      <div
+        className="absolute top-0 left-0 right-0 h-[2px] z-20"
+        style={{ background: `linear-gradient(90deg, transparent, ${divisionHex}30, transparent)` }}
+      />
+
+      {/* Card content */}
+      <div className="relative p-5 sm:p-6 lg:p-8">
+        <div className="flex flex-col items-center">
+
+          {/* ═══ Ghost Avatar Container ═══ */}
+          <div className="relative w-48 h-56 sm:w-56 sm:h-64 lg:w-64 lg:h-72 rounded-2xl overflow-hidden">
+            {/* Background gradient */}
+            <div
+              className="absolute inset-0"
+              style={{
+                background: `linear-gradient(180deg, ${divisionHex}10 0%, ${divisionHex}04 50%, transparent 100%)`,
+              }}
+            />
+
+            {/* Ghost circle avatar placeholder */}
+            <div className="absolute inset-0 flex items-start justify-center pt-2 sm:pt-3">
+              <div
+                className="relative w-36 h-36 sm:w-44 sm:h-44 lg:w-48 lg:h-48 rounded-full overflow-hidden"
+                style={{
+                  boxShadow: `0 0 16px ${divisionHex}08`,
+                }}
+              >
+                {/* Ring border — ghost version */}
+                <div
+                  className="absolute -inset-1 rounded-full"
+                  style={{
+                    background: `linear-gradient(135deg, ${divisionHex}25, ${divisionHex}10, transparent, ${divisionHex}15)`,
+                    padding: '2px',
+                  }}
+                >
+                  <div className="w-full h-full rounded-full bg-muted/20 flex items-center justify-center">
+                    <Crown className="w-10 h-10 text-idm-gold-warm/15" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* ── Ghost #1 Rank Badge ── */}
+            <div className="absolute top-2 left-2 sm:top-3 sm:left-3 z-20">
+              <div
+                className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] sm:text-xs font-black"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(239,249,35,0.15), rgba(249,203,37,0.1))',
+                  color: 'rgba(28,25,23,0.3)',
+                  border: '1px solid rgba(239,249,35,0.1)',
+                }}
+              >
+                <Crown className="w-3 h-3 text-idm-gold-warm/30" />
+                #1
+              </div>
+            </div>
+
+            {/* ── Bottom overlay: Ghost gamertag ── */}
+            <div className="absolute bottom-0 left-0 right-0 z-10">
+              <div
+                className="absolute inset-0"
+                style={{
+                  background: `linear-gradient(180deg, transparent 0%, ${config.darkOverlay} 100%)`,
+                }}
+              />
+              <div className="relative px-3 sm:px-4 pb-3 sm:pb-4 pt-8 flex flex-col items-center">
+                {/* Ghost gamertag */}
+                <div className="h-6 w-28 rounded bg-white/10 mb-1.5" />
+                {/* Ghost club + division */}
+                <div className="flex items-center gap-1.5">
+                  <div className="h-3 w-16 rounded bg-idm-gold-warm/10" />
+                  <span className="text-white/10">·</span>
+                  <span
+                    className="inline-flex items-center gap-0.5 text-[10px] sm:text-[11px] font-bold uppercase opacity-30"
+                    style={{ color: divisionHex }}
+                  >
+                    {division === 'male' ? <Music className="w-2.5 h-2.5" /> : <Shield className="w-2.5 h-2.5" />}
+                    {divisionLabel}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* ═══ Ghost Stat Bars ═══ */}
+          <div className="w-full space-y-2.5 sm:space-y-3 mt-5 sm:mt-6">
+            {ghostStats.map((stat) => (
+              <div key={stat.label} className="space-y-1.5">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-3 h-3 rounded bg-muted/20" />
+                    <span className="text-[11px] sm:text-xs font-bold text-muted-foreground/30 uppercase tracking-wider">
+                      {stat.label}
+                    </span>
+                  </div>
+                  <div className="h-4 w-8 rounded bg-muted/20" />
+                </div>
+                <div className="h-2 sm:h-2.5 rounded-full bg-muted/10 overflow-hidden">
+                  <div
+                    className={`h-full rounded-full ${stat.barBg}`}
+                    style={{ width: stat.width }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* ═══ Ghost CTA Button ═══ */}
+          <div className="w-full mt-4 sm:mt-5">
+            <div
+              className="w-full h-10 rounded-xl border"
+              style={{
+                backgroundColor: `${divisionHex}08`,
+                borderColor: `${divisionHex}12`,
+              }}
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+/* ═══════════════════════════════════════════
    Main Section — Top Rank #1
    ═══════════════════════════════════════════ */
 
@@ -320,11 +469,11 @@ export function TopRankSection({ maleData, femaleData, selectedDivision = 'all',
 
   const ct = getCommunityTheme();
 
-  // Don't render if no data available
-  if (!maleFeatured && !femaleFeatured) return null;
+  // Determine if we have any real data or need ghost state
+  const hasAnyData = !!(maleFeatured || femaleFeatured);
 
   return (
-    <div className={`${ct.casinoCard} overflow-hidden relative`} style={{ borderRadius: '28px' }}>
+    <div className={`${ct.casinoCard} overflow-hidden relative ${!hasAnyData ? 'opacity-70' : ''}`} style={{ borderRadius: '28px' }}>
       <div className={ct.casinoBar} />
 
       {/* Header — consistent with other section cards */}
@@ -338,9 +487,15 @@ export function TopRankSection({ maleData, femaleData, selectedDivision = 'all',
         <span className="text-[9px] font-bold uppercase tracking-wider text-idm-gold-warm">
           {showMale && showFemale ? 'COWO & CEWE' : showMale ? '♂ COWO' : '♀ CEWE'}
         </span>
-        <Badge className={`ml-auto ${ct.casinoBadge} text-[9px]`}>
-          #1
-        </Badge>
+        {hasAnyData ? (
+          <Badge className={`ml-auto ${ct.casinoBadge} text-[9px]`}>
+            #1
+          </Badge>
+        ) : (
+          <Badge className="ml-auto bg-muted/20 text-muted-foreground/40 border border-border/10 text-[9px] font-bold">
+            TBA
+          </Badge>
+        )}
       </div>
 
       {/* Content */}
@@ -350,12 +505,16 @@ export function TopRankSection({ maleData, femaleData, selectedDivision = 'all',
 
           {/* Male Player Card */}
           {showMale && (
-            <PlayerFullCard
-              player={maleFeatured}
-              division="male"
-              isVisible={true}
-              onViewPlayer={onPlayerClick}
-            />
+            maleFeatured ? (
+              <PlayerFullCard
+                player={maleFeatured}
+                division="male"
+                isVisible={true}
+                onViewPlayer={onPlayerClick}
+              />
+            ) : (
+              <GhostPlayerFullCard division="male" />
+            )
           )}
 
           {/* Central VS Badge — Desktop */}
@@ -382,12 +541,16 @@ export function TopRankSection({ maleData, femaleData, selectedDivision = 'all',
 
           {/* Female Player Card */}
           {showFemale && (
-            <PlayerFullCard
-              player={femaleFeatured}
-              division="female"
-              isVisible={true}
-              onViewPlayer={onPlayerClick}
-            />
+            femaleFeatured ? (
+              <PlayerFullCard
+                player={femaleFeatured}
+                division="female"
+                isVisible={true}
+                onViewPlayer={onPlayerClick}
+              />
+            ) : (
+              <GhostPlayerFullCard division="female" />
+            )
           )}
         </div>
       </div>
