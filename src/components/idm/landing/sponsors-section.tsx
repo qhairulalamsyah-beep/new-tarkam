@@ -35,8 +35,40 @@ export function SponsorsSection() {
 
   const sponsors = data?.sponsors ?? [];
 
-  // Don't render anything if no sponsors or still loading with no prior data
-  if (!isLoading && sponsors.length === 0) return null;
+  // Empty state when no sponsors
+  if (!isLoading && sponsors.length === 0) {
+    return (
+      <section
+        aria-label="Didukung Oleh"
+        className="relative py-10 sm:py-16 overflow-hidden bg-deep"
+      >
+        <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at 50% 50%, rgba(239,249,35,0.025) 0%, transparent 60%)' }} />
+
+        <div className="relative z-10 max-w-7xl mx-auto">
+          <SectionHeader
+            icon={Gem}
+            label="Didukung Oleh"
+            title="Sponsor & Partner"
+            subtitle="Mendukung ekosistem Tarkam IDM"
+          />
+
+          {/* Empty State — Sponsors */}
+          <div className="mt-6 flex flex-col items-center justify-center py-8 px-4">
+            <div className="border border-border/20 rounded-2xl overflow-hidden bg-card/30 opacity-50 w-full max-w-md">
+              <div className="h-[2px] bg-gradient-to-r from-transparent via-idm-gold-warm/50 to-transparent" />
+              <div className="flex flex-col items-center justify-center py-8 px-4">
+                <div className="w-10 h-10 rounded-xl bg-idm-gold-warm/10 flex items-center justify-center mb-3">
+                  <Gem className="w-5 h-5 text-idm-gold-warm opacity-50" />
+                </div>
+                <p className="text-sm font-bold text-idm-gold-warm/50">Belum ada sponsor</p>
+                <p className="text-[11px] text-muted-foreground/40 mt-1">Hubungi admin jika ingin menjadi sponsor</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   // Still loading and no data yet — show skeleton
   if (isLoading && sponsors.length === 0) {
