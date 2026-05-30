@@ -820,7 +820,7 @@ export function LandingPage() {
       </nav>
 
       {/* ========== EXPANDABLE FAB (Mobile) ========== — Pemain, Kalender, Bantuan */}
-      <div className="fab-menu-container md:hidden fixed right-4 bottom-24 z-40 flex flex-col items-end gap-2">
+      <div className="fab-menu-container md:hidden fixed right-4 bottom-[7.5rem] z-40 flex flex-col items-end gap-2">
         {/* Expanded menu items */}
         {fabOpen && (
           <>
