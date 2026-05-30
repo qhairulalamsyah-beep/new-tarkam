@@ -154,13 +154,12 @@ Kamu bisa melihat bracket lengkap di halaman <strong>Bracket</strong>.`,
     id: 'turnamen-4',
     category: 'turnamen',
     question: 'Berapa lama satu musim?',
-    answer: `Satu musim (season) Tarkam IDM biasanya berlangsung selama <strong>8–10 minggu</strong>, tergantung jumlah peserta dan jadwal yang ditentukan admin.
+    answer: `Satu musim (season) Tarkam IDM biasanya berlangsung selama <strong>10 minggu</strong>, tergantung jumlah peserta dan jadwal yang ditentukan admin.
 
 Setiap musim memiliki:
 <ul class="list-disc pl-5 mt-2 space-y-1">
 <li>Turnamen mingguan dengan poin yang terakumulasi</li>
 <li>Peringkat musiman berdasarkan total poin</li>
-<li>Hadiah akhir musim untuk pemain terbaik</li>
 </ul>
 
 Progres musim bisa dilihat di sidebar (desktop) atau halaman Kalender.`,
