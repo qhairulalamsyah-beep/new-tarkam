@@ -50,10 +50,11 @@ export function ShareButton({ title, description, url, variant = 'button', class
       <div className="flex items-center gap-1">
         <button
           onClick={nativeShare}
-          className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
+          className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors inline-flex items-center gap-1.5"
           title="Bagikan"
         >
           <Share2 className="w-4 h-4" />
+          <span className="text-[10px] font-semibold">Bagikan</span>
         </button>
       </div>
     );

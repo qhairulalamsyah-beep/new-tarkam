@@ -172,8 +172,8 @@ export function SharePopup({
     <div className="relative">
       <button
         onClick={handleClick}
-        className={`inline-flex items-center justify-center rounded-lg transition-all duration-200 cursor-pointer ${
-          isSm ? 'w-7 h-7' : 'w-9 h-9'
+        className={`inline-flex items-center justify-center gap-1 rounded-lg transition-all duration-200 cursor-pointer ${
+          isSm ? 'w-7 h-7' : 'h-9 px-2.5'
         } ${
           copied
             ? 'bg-green-500/15 text-green-400'
@@ -189,6 +189,9 @@ export function SharePopup({
           <Check className={isSm ? 'w-3.5 h-3.5' : 'w-4 h-4'} />
         ) : (
           <Share2 className={isSm ? 'w-3.5 h-3.5' : 'w-4 h-4'} />
+        )}
+        {!isSm && (
+          <span className="text-[10px] font-semibold">{copied ? 'Tersalin' : 'Bagikan'}</span>
         )}
       </button>
 
