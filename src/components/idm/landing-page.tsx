@@ -7,7 +7,7 @@ import { useCrossTabInvalidation } from '@/lib/cross-tab-sync';
 import { smartRefetchInterval } from '@/lib/smart-polling';
 
 import Image from 'next/image';
-import { Crown, Swords, LogIn, UserCircle, LogOut, Shield, Sun, Moon, Award, Home, Target, GitBranch, User, BookOpen, HelpCircle, Calendar } from 'lucide-react';
+import { Crown, Swords, LogIn, UserCircle, LogOut, Shield, Sun, Moon, Award, Home, Target, GitBranch, User, BookOpen, HelpCircle, Calendar, Zap, X } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { useSyncExternalStore, useState, useEffect, useCallback, useRef } from 'react';
 import { PublicNotifBell } from './ui/public-notif-bell';
@@ -853,7 +853,7 @@ export function LandingPage() {
           className={`w-12 h-12 rounded-full shadow-lg flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer bg-idm-gold-warm/90 shadow-idm-gold-warm/30 ${fabOpen ? 'rotate-45' : ''}`}
           title="Menu lainnya"
         >
-          <span className="text-lg text-black">{fabOpen ? '✖️' : '⚡'}</span>
+          {fabOpen ? <X className="w-5 h-5 text-black" /> : <Zap className="w-5 h-5 text-black" fill="black" />}
         </button>
       </div>
 
