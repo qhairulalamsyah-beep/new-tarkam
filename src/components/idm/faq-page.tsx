@@ -227,11 +227,11 @@ Tier diperbarui secara otomatis berdasarkan total poin musiman dan statistik per
     id: 'poin-4',
     category: 'poin',
     question: 'Apa itu MVP?',
-    answer: `<strong>MVP (Most Valuable Player)</strong> adalah penghargaan untuk pemain yang tampil paling outstanding di sebuah pertandingan.
+    answer: `<strong>MVP (Most Valuable Player)</strong> adalah penghargaan untuk pemain yang memiliki skor tertinggi di sebuah pertandingan.
 
 Ciri-ciri MVP:
 <ul class="list-disc pl-5 mt-2 space-y-1">
-<li>Dipilih berdasarkan performa terbaik dalam pertandingan</li>
+<li>Dipilih berdasarkan performa skor tertinggi di sebuah turnamen.</li>
 <li>Mendapat badge MVP di profil</li>
 <li>Mendapat bonus poin tambahan</li>
 <li>Total MVP ditampilkan di statistik pemain</li>
