@@ -171,6 +171,38 @@ const ACHIEVEMENTS = [
     criteria: JSON.stringify({ type: 'club_dominance', count: 3 }),
     rewardPoints: 150,
   },
+
+  // === PREDICTION ACHIEVEMENTS ===
+  {
+    name: 'ramalan_awal',
+    displayName: 'Ramalan Awal',
+    description: 'Menebak dengan benar 5 pertandingan',
+    category: 'prediction',
+    icon: '🎯',
+    tier: 'bronze',
+    criteria: JSON.stringify({ type: 'prediction_correct', count: 5 }),
+    rewardPoints: 25,
+  },
+  {
+    name: 'dukun_tarkam',
+    displayName: 'Dukun Tarkam',
+    description: 'Menebak dengan benar 10 pertandingan',
+    category: 'prediction',
+    icon: '🔮',
+    tier: 'silver',
+    criteria: JSON.stringify({ type: 'prediction_correct', count: 10 }),
+    rewardPoints: 75,
+  },
+  {
+    name: 'oracle',
+    displayName: 'Oracle',
+    description: 'Menebak dengan benar 25 pertandingan',
+    category: 'prediction',
+    icon: '⭐',
+    tier: 'gold',
+    criteria: JSON.stringify({ type: 'prediction_correct', count: 25 }),
+    rewardPoints: 200,
+  },
 ];
 
 export async function POST(request: Request) {

@@ -46,3 +46,10 @@ export async function getClubUnifiedProfile(clubId: string) {
   if (!response.ok) throw new Error('Failed to fetch club unified profile')
   return response.json()
 }
+
+// ── GET /api/clubs/[id]/stats ──
+export async function getClubStats(clubId: string) {
+  const response = await fetch(`/api/clubs/${clubId}/stats`)
+  if (!response.ok) throw new Error('Failed to fetch club stats')
+  return response.json()
+}

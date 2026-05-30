@@ -1,10 +1,15 @@
 'use client';
 
+import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
-import { Trophy, Coins, Star, Users } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Trophy, Coins, Star, Users, HandCoins } from 'lucide-react';
 import { AnimatedSection, SectionHeader } from './shared';
 import { formatCurrency } from '@/lib/utils';
 import { useTournaments } from '@/lib/hooks';
+import { useAppStore } from '@/lib/store';
+import { useQuery } from '@tanstack/react-query';
+import { PrizeClaimModal } from '@/components/idm/prize-claim-modal';
 
 
 /* ═══════════════════════════════════════════════════════
@@ -31,7 +36,19 @@ interface TournamentWithPrizes {
   prizes: Prize[];
 }
 
-function PrizeCard({ prize, totalPool }: { prize: Prize; totalPool: number }) {
+function PrizeCard({
+  prize,
+  totalPool,
+  canClaim,
+  onClaim,
+  existingClaim,
+}: {
+  prize: Prize;
+  totalPool: number;
+  canClaim: boolean;
+  onClaim: () => void;
+  existingClaim: { id: string; status: string } | null;
+}) {
   const percentage = totalPool > 0 ? Math.round((prize.prizeAmount / totalPool) * 100) : 0;
   const positionEmoji = prize.position === 1 ? '🥇' : prize.position === 2 ? '🥈' : prize.position === 3 ? '🥉' : '🎁';
   const positionBg = prize.position === 1 
@@ -42,6 +59,15 @@ function PrizeCard({ prize, totalPool }: { prize: Prize; totalPool: number }) {
     ? 'from-amber-700/15 to-amber-800/5 border-amber-700/20' 
     : 'from-muted/10 to-muted/5 border-border/30';
   
+  const claimStatusConfig: Record<string, { label: string; color: string }> = {
+    pending: { label: 'Menunggu', color: 'text-idm-gold-warm' },
+    verified: { label: 'Diverifikasi', color: 'text-green-500' },
+    processing: { label: 'Diproses', color: 'text-blue-500' },
+    shipped: { label: 'Dikirim', color: 'text-sky-500' },
+    completed: { label: 'Selesai', color: 'text-emerald-500' },
+    rejected: { label: 'Ditolak', color: 'text-red-500' },
+  };
+
   return (
     <div className={`relative overflow-hidden rounded-xl border bg-gradient-to-br ${positionBg} transition-all duration-300 hover:shadow-md`}>
       <div className="p-3 sm:p-4 flex items-center gap-3">
@@ -68,15 +94,34 @@ function PrizeCard({ prize, totalPool }: { prize: Prize; totalPool: number }) {
           </div>
         </div>
         
-        {/* Percentage bar */}
-        <div className="shrink-0 text-right">
-          <div className="text-[10px] font-bold text-muted-foreground mb-1">{percentage}%</div>
-          <div className="w-12 h-1.5 rounded-full bg-muted/30 overflow-hidden">
-            <div 
-              className="h-full rounded-full bg-idm-gold-warm/60 transition-all duration-700"
-              style={{ width: `${percentage}%` }}
-            />
+        {/* Percentage bar + Claim button */}
+        <div className="shrink-0 text-right space-y-1.5">
+          <div>
+            <div className="text-[10px] font-bold text-muted-foreground mb-1">{percentage}%</div>
+            <div className="w-12 h-1.5 rounded-full bg-muted/30 overflow-hidden">
+              <div 
+                className="h-full rounded-full bg-idm-gold-warm/60 transition-all duration-700"
+                style={{ width: `${percentage}%` }}
+              />
+            </div>
           </div>
+          {canClaim && !existingClaim && (
+            <Button
+              size="sm"
+              onClick={onClaim}
+              className="bg-idm-gold-warm/90 hover:bg-idm-gold-warm text-black text-[10px] font-bold h-6 px-2 gap-1"
+            >
+              <HandCoins className="w-3 h-3" />
+              Klaim
+            </Button>
+          )}
+          {canClaim && existingClaim && (
+            <Badge className={`text-[8px] border-0 px-1.5 py-0 ${
+              claimStatusConfig[existingClaim.status]?.color || 'text-idm-gold-warm'
+            } bg-current/10`}>
+              {claimStatusConfig[existingClaim.status]?.label || existingClaim.status}
+            </Badge>
+          )}
         </div>
       </div>
     </div>
@@ -92,6 +137,67 @@ function TournamentPrizeDisplay({ tournament }: { tournament: TournamentWithPriz
     ? 'shadow-[inset_0_1px_0_rgba(34,197,94,0.06)]'
     : 'shadow-[inset_0_1px_0_rgba(236,72,153,0.06)]';
   
+  // Player auth & claims
+  const { playerAuth } = useAppStore();
+  const playerId = playerAuth.account?.player?.id;
+  const playerDivision = playerAuth.account?.player?.division;
+  // Player phone is not directly available from the store; passed as undefined
+
+  // Fetch player's existing claims
+  const { data: myClaimsData } = useQuery({
+    queryKey: ['my-prize-claims'],
+    queryFn: async () => {
+      const res = await fetch('/api/prize-claims/my', { credentials: 'include' });
+      if (!res.ok) return { claims: [] };
+      return res.json();
+    },
+    enabled: !!playerId,
+    staleTime: 30000,
+  });
+
+  // Check if player won in this tournament
+  const { data: playerWinData } = useQuery({
+    queryKey: ['player-win-status', tournament.id, playerId],
+    queryFn: async () => {
+      if (!playerId) return { isWinner: false };
+      // Check participation
+      const res = await fetch(`/api/tournaments/${tournament.id}/participants`, { credentials: 'include' });
+      if (!res.ok) return { isWinner: false };
+      const data = await res.json();
+      const participants = data.data || data.participants || [];
+      const myParticipation = participants.find(
+        (p: { playerId: string; isWinner: boolean }) => p.playerId === playerId
+      );
+      return { isWinner: !!myParticipation?.isWinner };
+    },
+    enabled: !!playerId && playerDivision === tournament.division,
+    staleTime: 60000,
+  });
+
+  const isWinner = playerWinData?.isWinner || false;
+  const canClaim = !!playerId && playerDivision === tournament.division && isWinner;
+
+  // Existing claims map by prizeId
+  const existingClaimsMap = new Map<string, { id: string; status: string }>();
+  if (myClaimsData?.claims) {
+    for (const claim of myClaimsData.claims) {
+      if (claim.tournamentId === tournament.id) {
+        existingClaimsMap.set(claim.prizeId, { id: claim.id, status: claim.status });
+      }
+    }
+  }
+
+  // Prize claim modal state
+  const [claimModalOpen, setClaimModalOpen] = useState(false);
+  const [selectedPrize, setSelectedPrize] = useState<Prize | null>(null);
+  const [selectedExistingClaim, setSelectedExistingClaim] = useState<{ id: string; status: string } | null>(null);
+
+  const handleClaim = (prize: Prize) => {
+    setSelectedPrize(prize);
+    setSelectedExistingClaim(existingClaimsMap.get(prize.id) || null);
+    setClaimModalOpen(true);
+  };
+
   return (
     <div className={`space-y-3 p-3 sm:p-4 rounded-2xl border bg-background/60 backdrop-blur-sm ${divisionBorderAccent} ${divisionGlowAccent}`}>
       {/* Tournament Header */}
@@ -116,9 +222,36 @@ function TournamentPrizeDisplay({ tournament }: { tournament: TournamentWithPriz
         {tournament.prizes
           .sort((a, b) => a.position - b.position)
           .map(prize => (
-            <PrizeCard key={prize.id} prize={prize} totalPool={tournament.prizePool} />
+            <PrizeCard
+              key={prize.id}
+              prize={prize}
+              totalPool={tournament.prizePool}
+              canClaim={canClaim}
+              onClaim={() => handleClaim(prize)}
+              existingClaim={existingClaimsMap.get(prize.id) || null}
+            />
           ))}
       </div>
+
+      {/* Claim Modal */}
+      {selectedPrize && (
+        <PrizeClaimModal
+          open={claimModalOpen}
+          onOpenChange={setClaimModalOpen}
+          prize={selectedPrize}
+          tournament={{
+            id: tournament.id,
+            name: tournament.name,
+            weekNumber: tournament.weekNumber,
+            division: tournament.division,
+          }}
+          existingClaim={myClaimsData?.claims?.find(
+            (c: { prizeId: string; tournamentId: string }) => c.prizeId === selectedPrize.id && c.tournamentId === tournament.id
+          ) || null}
+          playerPhone={undefined}
+          playerGamertag={playerAuth.account?.player?.gamertag}
+        />
+      )}
     </div>
   );
 }

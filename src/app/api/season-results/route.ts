@@ -59,7 +59,7 @@ export async function GET(request: NextRequest) {
 
     const tournamentIds = tournaments.map(t => t.id);
 
-    // Get all completed matches for these tournaments
+    // Get all matches for these tournaments (including pending/ready for predictions)
     // Only include matches from tournaments in main_event or later status
     const activeTournamentIds = tournaments
       .filter(t => ['main_event', 'finalization', 'completed'].includes(t.status))
@@ -69,7 +69,6 @@ export async function GET(request: NextRequest) {
       ? await db.match.findMany({
           where: {
             tournamentId: { in: activeTournamentIds },
-            status: 'completed',
           },
           include: {
             team1: {
@@ -110,6 +109,8 @@ export async function GET(request: NextRequest) {
         score1: number | null;
         score2: number | null;
         format: string;
+        status: string;
+        winnerId: string | null;
         team1: { id: string; name: string } | null;
         team2: { id: string; name: string } | null;
         team1Players?: string;
@@ -164,6 +165,8 @@ export async function GET(request: NextRequest) {
         score1: m.score1,
         score2: m.score2,
         format: m.format || 'BO1',
+        status: m.status,
+        winnerId: m.winnerId,
         team1: m.team1 ? { id: m.team1.id, name: m.team1.name } : null,
         team2: m.team2 ? { id: m.team2.id, name: m.team2.name } : null,
         // ★ Flatten team players into comma-separated gamertags for display

@@ -16,6 +16,9 @@ interface DanceMatchCardProps {
   week?: number;
   mvpPlayer?: { id: string; name: string; gamertag: string } | null;
   onClick?: () => void;
+  /** When provided, clicking the card opens the MatchDetailPage modal instead of expanding */
+  onDetailOpen?: (matchId: string) => void;
+  matchId?: string;
 }
 
 /* ─── Status config ─── */
@@ -54,7 +57,7 @@ function TeamLogo({ name, isWinner, size = 'md' }: { name: string; isWinner: boo
 
 /* ─── Tournament Match Card — Dance Competition Banner Style ─── */
 export function DanceMatchCard({
-  team1, team2, score1, score2, status, week, mvpPlayer, onClick
+  team1, team2, score1, score2, status, week, mvpPlayer, onClick, onDetailOpen, matchId
 }: DanceMatchCardProps) {
   const dt = useDivisionTheme();
   const division = useAppStore(s => s.division);
@@ -72,6 +75,12 @@ export function DanceMatchCard({
   const statusConfig = getStatusConfig(status);
 
   const handleClick = () => {
+    // If onDetailOpen and matchId are provided, open the detail modal
+    if (onDetailOpen && matchId) {
+      onDetailOpen(matchId);
+      onClick?.();
+      return;
+    }
     setExpanded(!expanded);
     onClick?.();
   };

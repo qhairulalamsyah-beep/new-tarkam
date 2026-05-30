@@ -22,10 +22,28 @@ import { useAppStore } from '@/lib/store';
 import { getAvatarUrl, hashString, clubToString, isVideoUrl } from '@/lib/utils';
 import { getPlayerById, getPlayerMatches, getPlayerAchievementsDetailed as getPlayerAchievementsQuery, getPlayerPointBreakdown } from '@/lib/queries';
 import { AchievementList } from './achievement-badge';
+import { AchievementShowcase, AchievementBadgesInline } from './achievement-showcase';
 import { SocialShareButton } from './social-share-button';
 import { PlayerSeasonHistory } from './player-season-history';
 import { ClubLogoImage } from './club-logo-image';
 import { TierProgress } from './ui/tier-progress';
+import { WaNotifPreferences } from './wa-notif-preferences';
+import { ReferralSection } from './referral-section';
+import dynamic from 'next/dynamic';
+
+// Lazy load performance charts — heavy Recharts dependency
+const PlayerPerformanceCharts = dynamic(
+  () => import('./player-performance-charts').then(mod => ({ default: mod.PlayerPerformanceCharts })),
+  { ssr: false, loading: () => (
+    <div className="p-4 rounded-2xl bg-muted/5 border border-border/10 mb-4">
+      <div className="flex items-center gap-2 mb-3">
+        <BarChart3 className="w-4 h-4 text-muted-foreground/40" />
+        <span className="text-sm font-semibold text-muted-foreground/40">Grafik Performa</span>
+      </div>
+      <div className="h-[220px] animate-pulse bg-muted/10 rounded-xl" />
+    </div>
+  )},
+);
 
 interface PlayerProfileProps {
   player: {
@@ -536,6 +554,26 @@ export function PlayerProfile({ player, onClose, rank, skinMap, preferredSkinTyp
                   <SkinName skin={primarySkin} skinColors={skinColors}>
                     <h2 className="text-2xl font-black drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">{player.gamertag}</h2>
                   </SkinName>
+                  {/* Inline achievement badges next to gamertag */}
+                  {achievementData?.achievements && achievementData.achievements.length > 0 && (
+                    <AchievementBadgesInline
+                      achievements={(achievementData.achievements as Record<string, unknown>[]).map((a: Record<string, unknown>) => {
+                        const ach = Array.isArray(a.achievement) ? a.achievement[0] : a.achievement as Record<string, unknown>;
+                        return {
+                          id: (ach?.id || a.achievementId) as string,
+                          name: (ach?.name || '') as string,
+                          displayName: (ach?.displayName || '') as string,
+                          description: (ach?.description || '') as string,
+                          category: (ach?.category || 'earned') as string,
+                          icon: (ach?.icon || '🏆') as string,
+                          tier: (ach?.tier || 'bronze') as string,
+                          earned: true,
+                          earnedAt: (a.earnedAt instanceof Date ? a.earnedAt.toISOString() : String(a.earnedAt ?? '')),
+                        };
+                      })}
+                      maxShow={3}
+                    />
+                  )}
                   {playerSkins.length > 0 && <SkinBadgesRow skins={playerSkins} hideSawerAndDonorBadges={playerSkins.some(s => s.type === 'sultan_weekly')} />}
                   <SocialShareButton playerGamertag={player.gamertag} playerId={player.id} />
                 </div>
@@ -720,75 +758,46 @@ export function PlayerProfile({ player, onClose, rank, skinMap, preferredSkinTyp
               </div>
             </div>
 
-            {/* ═══ Achievements ═══ */}
-            <div className="mb-4">
-              <div className="flex items-center gap-2 mb-2">
-                <Award className={`w-4 h-4 ${dt.text}`} />
-                <h3 className="text-sm font-semibold">Prestasi</h3>
-                {achievementData?.stats && (
-                  <Badge className={`${dt.casinoBadge} text-[8px] ml-auto`}>
-                    {achievementData.stats.earned}/{achievementData.stats.total}
-                  </Badge>
-                )}
-              </div>
-              {achievementData?.achievements && achievementData.achievements.length > 0 ? (
-                <AchievementList
-                  achievements={(achievementData?.achievements || []).map((a: Record<string, unknown>) => {
-                    const ach = Array.isArray(a.achievement) ? a.achievement[0] : a.achievement as Record<string, unknown>;
-                    return {
-                      id: (ach?.id || a.achievementId) as string,
-                      name: (ach?.name || '') as string,
-                      displayName: (ach?.displayName || '') as string,
-                      description: (ach?.description || '') as string,
-                      category: (ach?.category || 'earned') as string,
-                      icon: (ach?.icon || '🏆') as string,
-                      tier: (ach?.tier || 'bronze') as string,
-                      earned: true,
-                      earnedAt: (a.earnedAt instanceof Date ? a.earnedAt.toISOString() : String(a.earnedAt ?? '')),
-                    };
-                  }) as any}
-                  size="md"
-                />
-              ) : (
-                <div className="flex flex-wrap gap-1.5">
-                  {/* Fallback badges based on player stats */}
-                  {displayWins >= 1 && (
-                    <Badge className="bg-green-500/10 text-green-500 text-[10px] border-0">
-                      <Star className="w-3 h-3 mr-1" /> Win Pertama
-                    </Badge>
-                  )}
-                  {displayWins >= 5 && (
-                    <Badge className="bg-blue-500/10 text-blue-400 text-[10px] border-0">
-                      <Trophy className="w-3 h-3 mr-1" /> 5 Win
-                    </Badge>
-                  )}
-                  {totalMvp >= 1 && (
-                    <Badge className="bg-yellow-500/10 text-yellow-500 text-[10px] border-0">
-                      <Crown className="w-3 h-3 mr-1" /> MVP
-                    </Badge>
-                  )}
-                  {maxStreak >= 3 && (
-                    <Badge className="bg-orange-500/10 text-orange-500 text-[10px] border-0">
-                      <Flame className="w-3 h-3 mr-1" /> Membara
-                    </Badge>
-                  )}
-
-                  {isChampion && (
-                    <Badge className="bg-yellow-500/10 text-yellow-500 text-[10px] border-0">
-                      <Crown className="w-3 h-3 mr-1" /> Juara
-                    </Badge>
-                  )}
-                  {displayMatches >= 5 && (
-                    <Badge className="bg-amber-600/10 text-amber-600 text-[10px] border-0">
-                      <BarChart3 className="w-3 h-3 mr-1" /> Veteran
-                    </Badge>
-                  )}
-                  {displayWins === 0 && totalMvp === 0 && (
-                    <p className="text-xs text-muted-foreground">Belum ada prestasi</p>
-                  )}
-                </div>
-              )}
-            </div>
+            {/* ═══ Achievement Showcase ═══ */}
+            <AchievementShowcase
+              playerId={player.id}
+              division={playerDivision}
+              achievements={(achievementData?.achievements || []).map((a: Record<string, unknown>) => {
+                const ach = Array.isArray(a.achievement) ? a.achievement[0] : a.achievement as Record<string, unknown>;
+                return {
+                  id: (ach?.id || a.achievementId) as string,
+                  name: (ach?.name || '') as string,
+                  displayName: (ach?.displayName || '') as string,
+                  description: (ach?.description || '') as string,
+                  category: (ach?.category || 'earned') as string,
+                  icon: (ach?.icon || '🏆') as string,
+                  tier: (ach?.tier || 'bronze') as string,
+                  earned: true,
+                  earnedAt: (a.earnedAt instanceof Date ? a.earnedAt.toISOString() : String(a.earnedAt ?? '')),
+                  context: (a.context || ach?.criteria) as Record<string, unknown> | undefined,
+                };
+              })}
+              availableAchievements={(achievementData?.availableAchievements || []).map((a: Record<string, unknown>) => ({
+                id: (a.id || '') as string,
+                name: (a.name || '') as string,
+                displayName: (a.displayName || '') as string,
+                description: (a.description || '') as string,
+                category: (a.category || 'other') as string,
+                icon: (a.icon || '🏆') as string,
+                tier: (a.tier || 'bronze') as string,
+                criteria: a.criteria as Record<string, unknown> | undefined,
+                earned: (a.earned === true),
+              }))}
+              stats={achievementData?.stats ? {
+                total: achievementData.stats.total as number,
+                earned: achievementData.stats.earned as number,
+                remaining: achievementData.stats.remaining as number,
+              } : undefined}
+              totalWins={displayWins}
+              totalMvp={totalMvp}
+              points={points}
+              matches={displayMatches}
+            />
 
             {/* ═══ Recent Matches — only from organizer-input data ═══ */}
             {hasMatchHistory ? (
@@ -1154,6 +1163,26 @@ export function PlayerProfile({ player, onClose, rank, skinMap, preferredSkinTyp
                 </div>
               </div>
             </div>
+
+            {/* ═══ Performance Charts ═══ */}
+            <PlayerPerformanceCharts
+              playerId={player.id}
+              playerDivision={playerDivision}
+            />
+
+            {/* ═══ WhatsApp Notification Preferences (only for own profile) ═══ */}
+            {isMe && (
+              <div className="mb-4">
+                <WaNotifPreferences />
+              </div>
+            )}
+
+            {/* ═══ Referral Section (only for own profile) ═══ */}
+            {isMe && (
+              <div className={`p-4 rounded-2xl ${dt.bgSubtle} border ${dt.borderSubtle} mb-4`}>
+                <ReferralSection />
+              </div>
+            )}
           </div>
 
           {/* ═══ Bottom accent line — traveling spotlight ═══ */}

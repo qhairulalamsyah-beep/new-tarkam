@@ -76,3 +76,10 @@ export async function getLiveMatchCount(params?: { division?: string }) {
   }
   return response.json()
 }
+
+// ── GET /api/matches/[id] — Match detail for the Match Detail modal ──
+export async function getMatchDetail(id: string) {
+  const response = await fetch(`/api/matches/${id}`)
+  if (!response.ok) return null
+  return response.json()
+}

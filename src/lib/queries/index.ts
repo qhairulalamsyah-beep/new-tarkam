@@ -57,6 +57,7 @@ export {
   getClubById,
   getClubLeaderboard,
   getClubMembers,
+  getClubStats,
 } from './clubs'
 
 // Donations
@@ -132,4 +133,10 @@ export {
   getWaRegistrations,
   getCloudinaryImages,
   getBackup,
+  getLiveStreams,
+  getWaNotifPreferences,
+  updateWaNotifPreferences,
+  sendTestWaNotification,
+  sendWaNotification,
+  getWaNotifLog,
 } from './misc'

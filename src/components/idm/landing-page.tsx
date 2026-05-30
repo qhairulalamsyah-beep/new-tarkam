@@ -7,10 +7,11 @@ import { useCrossTabInvalidation } from '@/lib/cross-tab-sync';
 import { smartRefetchInterval } from '@/lib/smart-polling';
 
 import Image from 'next/image';
-import { Crown, Swords, LogIn, UserCircle, LogOut, Shield, Sun, Moon, Award, Home, Target, GitBranch, User, BookOpen } from 'lucide-react';
+import { Crown, Swords, LogIn, UserCircle, LogOut, Shield, Sun, Moon, Award, Home, Target, GitBranch, User, BookOpen, HelpCircle } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { useSyncExternalStore, useState, useEffect, useCallback, useRef } from 'react';
 import { PublicNotifBell } from './ui/public-notif-bell';
+import { NotificationPushPermission } from './notification-push-permission';
 import type { StatsData } from '@/types/stats';
 
 // ★ Above-fold: keep synchronous for instant render
@@ -43,6 +44,12 @@ const DonationModal = dynamic(() => import('./donation-modal').then(m => ({ defa
 const HasilSection = dynamic(() => import('./landing/hasil-section').then(m => ({ default: m.HasilSection })), { ssr: false, loading: () => <div className="min-h-[280px] sm:min-h-[360px]" /> });
 const TournamentPrizeSection = dynamic(() => import('./landing/tournament-prize-section').then(m => ({ default: m.TournamentPrizeSection })), { ssr: false, loading: () => <div className="min-h-[200px]" /> });
 const TopPlayersSection = dynamic(() => import('./landing/top-players-section').then(m => ({ default: m.TopPlayersSection })), { ssr: false, loading: () => <div className="min-h-[300px] sm:min-h-[400px]" /> });
+const PredictionLeaderboard = dynamic(() => import('./prediction-leaderboard').then(m => ({ default: m.PredictionLeaderboard })), { ssr: false, loading: () => null });
+const LiveStreamSection = dynamic(() => import('./landing/live-stream-section').then(m => ({ default: m.LiveStreamSection })), { ssr: false, loading: () => null });
+
+// ★ Global Search — command palette
+const GlobalSearch = dynamic(() => import('./global-search').then(m => ({ default: m.GlobalSearch })), { ssr: false, loading: () => null });
+const GlobalSearchTrigger = dynamic(() => import('./global-search').then(m => ({ default: m.GlobalSearchTrigger })), { ssr: false, loading: () => null });
 
 // Shared hooks & components
 import { useSwipeNavigation, useScrollReveal, SectionDivider } from './landing/shared';
@@ -335,6 +342,9 @@ export function LandingPage() {
   const [paymentModalDivision, setPaymentModalDivision] = useState<'male' | 'female'>('male');
   const [donationTournamentId, setDonationTournamentId] = useState<string | null>(null);
 
+  /* Global Search State */
+  const [searchOpen, setSearchOpen] = useState(false);
+
   /* Mobile performance: defer non-critical queries on small screens */
   // ★ FIX: Reduced mobile delay from 2000ms → 500ms. The 2s delay was too aggressive —
   // it caused sections to appear blank on mobile because:
@@ -623,6 +633,18 @@ export function LandingPage() {
   useSwipeNavigation();
   useScrollReveal();
 
+  // ★ Global keyboard shortcut: Ctrl+K / Cmd+K → open search
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setSearchOpen(true);
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, []);
+
   // ★ Show full-page skeleton while initial data is loading
   // OPTIMIZATION: Only wait for maleData (primary division) for faster LCP
   // Female data loads in background without blocking the initial render
@@ -656,7 +678,9 @@ export function LandingPage() {
               { view: 'bracket' as AppView, label: 'Bracket', special: false },
               { view: 'highlights' as AppView, label: 'Juara', special: true },
               { view: 'peringkat' as AppView, label: 'Peringkat', special: false },
+              { view: 'calendar' as AppView, label: 'Kalender', special: false },
               { view: 'players' as AppView, label: 'Pemain', special: false },
+              { view: 'faq' as AppView, label: 'Bantuan', special: false },
             ].map(item => (
               <button
                 key={item.view}
@@ -684,8 +708,10 @@ export function LandingPage() {
             ))}
           </div>
 
-          {/* Right Actions: Theme Toggle + Notif Bell + Login */}
+          {/* Right Actions: Search + Theme Toggle + Notif Bell + Login */}
           <div className="flex items-center gap-1 sm:gap-1.5 ml-1.5 sm:ml-0">
+            {/* Global Search Trigger */}
+            <GlobalSearchTrigger onClick={() => setSearchOpen(true)} scrolled={scrolled} />
             {/* Theme Toggle */}
             <LandingThemeToggle scrolled={scrolled} />
             {/* Notification Bell */}
@@ -718,7 +744,8 @@ export function LandingPage() {
               { view: 'hasil' as AppView, label: 'Hasil', icon: Swords, special: false },
               { view: 'highlights' as AppView, label: 'Juara', icon: Crown, special: true },
               { view: 'peringkat' as AppView, label: 'Peringkat', icon: Award, special: false },
-              { view: 'bracket' as AppView, label: 'Bracket', icon: GitBranch, special: false },
+              { view: 'calendar' as AppView, label: 'Kalender', icon: Calendar, special: false },
+              { view: 'faq' as AppView, label: 'Bantuan', icon: HelpCircle, special: false },
             ].map(item => {
               const isActive = currentView === item.view;
 
@@ -794,6 +821,13 @@ export function LandingPage() {
         tournamentStatus={tournamentStatus}
       />
 
+
+      {/* Live Stream — embedded YouTube/Twitch when streams are active */}
+      {currentView === 'landing' && (
+        <div className="section-reveal">
+          <LiveStreamSection />
+        </div>
+      )}
 
       {/* Marquee Ticker — Live Stats & Feed */}
       <div className="relative z-10 border-y border-idm-gold-warm/10 bg-deep/80">
@@ -882,6 +916,17 @@ export function LandingPage() {
 
       <SectionDivider />
 
+      {/* Prediction Leaderboard — Top Prediktor */}
+      <div className="section-reveal">
+        <div className="landing-section py-6 sm:py-10 px-4 sm:px-6 lg:px-8">
+          <div className="max-w-7xl mx-auto">
+            <PredictionLeaderboard limit={5} />
+          </div>
+        </div>
+      </div>
+
+      <SectionDivider />
+
       {/* Sponsors — "Didukung Oleh" */}
       <SponsorsSection />
 
@@ -944,6 +989,9 @@ export function LandingPage() {
       {/* ========== SCROLL PROGRESS BAR ========== */}
       <ScrollProgress />
 
+      {/* ========== PUSH NOTIFICATION PERMISSION ========== */}
+      <NotificationPushPermission />
+
       {/* ========== BACK TO TOP BUTTON ========== */}
       <BackToTop />
 
@@ -994,6 +1042,58 @@ export function LandingPage() {
           }}
         />
       )}
+
+      {/* ========== GLOBAL SEARCH MODAL ========== */}
+      <GlobalSearch
+        open={searchOpen}
+        onOpenChange={setSearchOpen}
+        onSelectPlayer={(player) => {
+          // Open player profile from search result
+          const searchDivision = (player.division === 'male' || player.division === 'female') ? player.division : 'male';
+          const data = searchDivision === 'male' ? maleData : femaleData;
+          const found = data?.topPlayers?.find(p => p.id === player.id);
+          if (found) {
+            setSelectedPlayer({ ...found, division: searchDivision });
+          } else {
+            setSelectedPlayer({
+              id: player.id,
+              name: player.gamertag,
+              gamertag: player.gamertag,
+              avatar: player.avatar,
+              tier: player.tier || 'B',
+              points: player.points || 0,
+              totalWins: player.totalWins || 0,
+              streak: 0,
+              maxStreak: 0,
+              totalMvp: player.totalMvp || 0,
+              matches: 0,
+              division: searchDivision,
+              club: player.club?.name || undefined,
+            });
+          }
+        }}
+        onSelectClub={(club) => {
+          // Open club profile from search result
+          const clubDivision = (club.division === 'male' || club.division === 'female') ? club.division : 'male';
+          setSelectedClub({
+            id: club.id,
+            name: club.name,
+            logo: club.logo,
+            division: clubDivision,
+            wins: club.wins,
+            losses: club.losses,
+            points: club.points,
+            gameDiff: 0,
+          });
+        }}
+        onSelectTournament={(tournament) => {
+          // Navigate to tournament view
+          const tournamentDivision = (tournament.division === 'male' || tournament.division === 'female') ? tournament.division : 'male';
+          setDivision(tournamentDivision);
+          setCurrentView('hasil');
+          window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior });
+        }}
+      />
     </div>
   );
 }

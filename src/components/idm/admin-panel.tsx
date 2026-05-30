@@ -5,8 +5,8 @@ import { useAppStore } from '@/lib/store';
 import {
   Shield, Users, Music, Gift,
   Globe, LayoutDashboard, Sliders, Flame, Calendar,
-  Sparkles, Clock,
-  ChevronDown, Menu, X, Home, LogOut
+  Sparkles, Clock, Radio,
+  ChevronDown, Menu, X, Home, LogOut, Trophy
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
@@ -24,6 +24,8 @@ import { AdminSponsorPanel } from './admin-sponsor-panel';
 import { AdminSkinPanel } from './admin-skin-panel';
 import { AdminSettingsPanel } from './admin-settings-panel';
 import { AdminDivisionContentTab } from './admin/tabs/admin-division-content-tab';
+import { AdminPrizeClaimsTab } from './admin/tabs/admin-prize-claims-tab';
+import { AdminLiveStreamTab } from './admin/tabs/admin-livestream-tab';
 import { AdminPendingTab } from './admin/tabs/admin-pending-tab';
 import { AdminManagement } from './admin-management';
 import { AdminSeasonPanel } from './admin-season-panel';
@@ -363,8 +365,8 @@ export function AdminPanel() {
     turnamen: ['season', 'pending', 'turnamen'],
     pemain: ['pemain'],
     club: ['club'],
-    keuangan: ['keuangan'],
-    pengaturan: ['konten', 'sponsor', 'skin', 'pengaturan'],
+    keuangan: ['keuangan', 'prize-claims'],
+    pengaturan: ['konten', 'sponsor', 'skin', 'livestream', 'pengaturan'],
   };
 
   const getTabConfig = (tabValue: string): { icon: typeof Users; label: string; count?: number } | null => {
@@ -375,6 +377,8 @@ export function AdminPanel() {
       club: { icon: Shield, label: 'Club' },
       turnamen: { icon: Music, label: 'Turnamen' },
       keuangan: { icon: Gift, label: 'Keuangan', count: donationCount || undefined },
+      'prize-claims': { icon: Trophy, label: 'Klaim Hadiah' },
+      livestream: { icon: Radio, label: 'Live Stream' },
       season: { icon: Calendar, label: 'Season' },
       konten: { icon: Globe, label: 'Halaman' },
       sponsor: { icon: Flame, label: 'Sponsor' },
@@ -461,13 +465,20 @@ export function AdminPanel() {
     },
     { key: 'pemain', icon: Users, label: 'Pemain' },
     { key: 'club', icon: Shield, label: 'Club' },
-    { key: 'keuangan', icon: Gift, label: 'Keuangan', badge: donationCount || undefined },
+    {
+      key: 'keuangan', icon: Gift, label: 'Keuangan', badge: donationCount || undefined,
+      subItems: [
+        { key: 'keuangan', icon: Gift, label: 'Keuangan', badge: donationCount || undefined },
+        { key: 'prize-claims', icon: Trophy, label: 'Klaim Hadiah' },
+      ],
+    },
     {
       key: 'pengaturan', icon: Sliders, label: 'Pengaturan',
       subItems: [
         { key: 'konten', icon: Globe, label: 'Konten' },
         { key: 'sponsor', icon: Flame, label: 'Sponsor' },
         { key: 'skin', icon: Sparkles, label: 'Skin' },
+        { key: 'livestream', icon: Radio, label: 'Live Stream' },
         { key: 'pengaturan', icon: Sliders, label: 'Umum' },
       ],
     },
@@ -817,6 +828,14 @@ export function AdminPanel() {
             />
           </ErrorBoundary>
         );
+      case 'prize-claims':
+        return (
+          <div className="space-y-4">
+            <ErrorBoundary>
+              <AdminPrizeClaimsTab division={storeDivision} />
+            </ErrorBoundary>
+          </div>
+        );
       case 'konten':
         return (
           <div className="space-y-4">
@@ -849,6 +868,14 @@ export function AdminPanel() {
           <div className="space-y-4">
             <ErrorBoundary>
               <AdminSkinPanel />
+            </ErrorBoundary>
+          </div>
+        );
+      case 'livestream':
+        return (
+          <div className="space-y-4">
+            <ErrorBoundary>
+              <AdminLiveStreamTab division={storeDivision} />
             </ErrorBoundary>
           </div>
         );

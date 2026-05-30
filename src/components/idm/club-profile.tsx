@@ -13,7 +13,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { getAvatarUrl, hashString } from '@/lib/utils';
-import { useClubUnifiedProfile } from '@/lib/hooks';
+import { useClubUnifiedProfile, useClubStats } from '@/lib/hooks';
 import { ClubLogoImage } from '@/components/idm/club-logo-image';
 import { SharePopup } from './social-share-button';
 
@@ -264,6 +264,9 @@ export function ClubProfile({ club, onClose, rank, onPlayerClick }: ClubProfileP
   // Fetch unified club profile with members from both divisions
   const { data: unifiedData, isLoading: isUnifiedLoading } = useClubUnifiedProfile(club.id);
 
+  // Fetch detailed club stats from the new API
+  const { data: statsData, isLoading: isStatsLoading } = useClubStats(club.id);
+
   // Use unified data if available, fall back to prop data
   const displayWins = unifiedData?.wins ?? club.wins;
   const displayLosses = unifiedData?.losses ?? club.losses;
@@ -468,6 +471,122 @@ export function ClubProfile({ club, onClose, rank, onPlayerClick }: ClubProfileP
               <StatBlock icon={Music} label="Game Diff" value={displayGameDiff > 0 ? `+${displayGameDiff}` : displayGameDiff} color="text-yellow-500" />
             </div>
 
+            {/* ════════════════════════════════════════════════════════════
+                ENHANCED: Stats Overview Grid — 6 stat cards in 2x3 or 3x2 grid
+                ════════════════════════════════════════════════════════════ */}
+            <div className="mb-4">
+              <div className="flex items-center gap-2 mb-2">
+                <BarChart3 className="w-4 h-4 text-idm-gold-warm" />
+                <h3 className="text-sm font-semibold">Statistik Detail</h3>
+              </div>
+              {isStatsLoading ? (
+                <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
+                  {Array.from({ length: 6 }).map((_, i) => (
+                    <div key={i} className="px-2 py-2.5 sm:p-4 sm:py-5 rounded-xl sm:rounded-2xl bg-muted/30 border border-border/30 text-center animate-pulse">
+                      <div className="w-3.5 h-3.5 sm:w-4 sm:h-4 bg-muted/50 rounded mx-auto mb-1" />
+                      <div className="h-5 w-10 bg-muted/50 rounded mx-auto mb-1" />
+                      <div className="h-3 w-12 bg-muted/30 rounded mx-auto" />
+                    </div>
+                  ))}
+                </div>
+              ) : statsData ? (
+                <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
+                  <StatBlock icon={Trophy} label="Total Poin" value={statsData.totalPoints.toLocaleString('id-ID')} color="text-idm-gold-warm" />
+                  <StatBlock icon={Trophy} label="Total Win" value={statsData.totalWins} sub="semua anggota" color="text-green-500" />
+                  <StatBlock icon={Target} label="Win Rate" value={`${statsData.winRate}%`} sub={`dari ${statsData.totalMatches} match`} color="text-emerald-500" />
+                  <StatBlock icon={Star} label="Total MVP" value={statsData.totalMvp} sub="semua anggota" color="text-yellow-500" />
+                  <StatBlock icon={Users} label="Anggota" value={statsData.totalMembers} color="text-idm-gold-warm" />
+                  <StatBlock icon={TrendingUp} label="Rata-rata Poin" value={statsData.averagePoints} sub="per anggota" color="text-amber-500" />
+                </div>
+              ) : null}
+            </div>
+
+            {/* ════════════════════════════════════════════════════════════
+                ENHANCED: Division Breakdown — side-by-side male/female
+                ════════════════════════════════════════════════════════════ */}
+            {statsData && (statsData.maleStats.memberCount > 0 || statsData.femaleStats.memberCount > 0) && (
+              <div className="mb-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <Shield className="w-4 h-4 text-idm-gold-warm" />
+                  <h3 className="text-sm font-semibold">Breakdown Divisi</h3>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  {/* Male Division */}
+                  {statsData.maleStats.memberCount > 0 && (
+                    <div className="p-3 rounded-xl bg-idm-male/5 border border-idm-male/15">
+                      <div className="flex items-center gap-1.5 mb-2">
+                        <span className="text-sm">🕺</span>
+                        <span className="text-xs font-bold text-idm-male-light dark:text-[#57B5FF]">Cowo</span>
+                        <Badge className="bg-idm-male/10 text-idm-male-light dark:text-[#57B5FF] text-[8px] border-0 ml-auto">{statsData.maleStats.memberCount}</Badge>
+                      </div>
+                      <div className="space-y-1 text-[10px]">
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Poin</span>
+                          <span className="font-bold text-idm-male-light dark:text-[#57B5FF]">{statsData.maleStats.totalPoints.toLocaleString('id-ID')}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Win</span>
+                          <span className="font-semibold">{statsData.maleStats.totalWins}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">MVP</span>
+                          <span className="font-semibold">{statsData.maleStats.totalMvp}</span>
+                        </div>
+                      </div>
+                      {statsData.maleStats.topPlayer && (
+                        <div className="mt-2 pt-2 border-t border-idm-male/10">
+                          <p className="text-[8px] text-muted-foreground mb-0.5">Terbaik</p>
+                          <div className="flex items-center gap-1.5">
+                            <div className="relative w-5 h-5 rounded-full overflow-hidden shrink-0 bg-idm-male/10">
+                              <AvatarMedia src={getAvatarUrl(statsData.maleStats.topPlayer.gamertag, 'male', statsData.maleStats.topPlayer.avatar)} alt={statsData.maleStats.topPlayer.gamertag} fill sizes="20px" objectPosition="top" />
+                            </div>
+                            <span className="text-[10px] font-medium truncate">{statsData.maleStats.topPlayer.gamertag}</span>
+                            <span className="text-[9px] font-bold text-idm-gold-warm ml-auto">{statsData.maleStats.topPlayer.points}</span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  {/* Female Division */}
+                  {statsData.femaleStats.memberCount > 0 && (
+                    <div className="p-3 rounded-xl bg-idm-female/5 border border-idm-female/15">
+                      <div className="flex items-center gap-1.5 mb-2">
+                        <span className="text-sm">💃</span>
+                        <span className="text-xs font-bold text-idm-female-light dark:text-[#FF5C9A]">Cewe</span>
+                        <Badge className="bg-idm-female/10 text-idm-female-light dark:text-[#FF5C9A] text-[8px] border-0 ml-auto">{statsData.femaleStats.memberCount}</Badge>
+                      </div>
+                      <div className="space-y-1 text-[10px]">
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Poin</span>
+                          <span className="font-bold text-idm-female-light dark:text-[#FF5C9A]">{statsData.femaleStats.totalPoints.toLocaleString('id-ID')}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Win</span>
+                          <span className="font-semibold">{statsData.femaleStats.totalWins}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">MVP</span>
+                          <span className="font-semibold">{statsData.femaleStats.totalMvp}</span>
+                        </div>
+                      </div>
+                      {statsData.femaleStats.topPlayer && (
+                        <div className="mt-2 pt-2 border-t border-idm-female/10">
+                          <p className="text-[8px] text-muted-foreground mb-0.5">Terbaik</p>
+                          <div className="flex items-center gap-1.5">
+                            <div className="relative w-5 h-5 rounded-full overflow-hidden shrink-0 bg-idm-female/10">
+                              <AvatarMedia src={getAvatarUrl(statsData.femaleStats.topPlayer.gamertag, 'female', statsData.femaleStats.topPlayer.avatar)} alt={statsData.femaleStats.topPlayer.gamertag} fill sizes="20px" objectPosition="top" />
+                            </div>
+                            <span className="text-[10px] font-medium truncate">{statsData.femaleStats.topPlayer.gamertag}</span>
+                            <span className="text-[9px] font-bold text-idm-gold-warm ml-auto">{statsData.femaleStats.topPlayer.points}</span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* Per-Division Points Breakdown */}
             {(displayMalePoints > 0 || displayFemalePoints > 0) && (
               <div className="flex items-center justify-center gap-3 mb-4">
@@ -586,6 +705,60 @@ export function ClubProfile({ club, onClose, rank, onPlayerClick }: ClubProfileP
               )}
             </div>
 
+            {/* ════════════════════════════════════════════════════════════
+                ENHANCED: Top Performers — horizontal scroll of top member cards
+                ════════════════════════════════════════════════════════════ */}
+            {statsData && statsData.topPerformers.length > 0 && (
+              <div className="mb-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <Crown className="w-4 h-4 text-idm-gold-warm" />
+                  <h3 className="text-sm font-semibold">Top Performer</h3>
+                </div>
+                <div className="flex gap-2 overflow-x-auto custom-scrollbar pb-1 -mx-1 px-1">
+                  {statsData.topPerformers.map((p: { id: string; gamertag: string; name: string; division: string; avatar: string | null; tier: string; points: number; totalWins: number; totalMvp: number; rank: number }) => {
+                    const isMale = p.division === 'male';
+                    const isTop = p.rank === 1;
+                    const tierColors: Record<string, string> = { S: 'text-yellow-500', A: 'text-emerald-500', B: 'text-muted-foreground' };
+                    return (
+                      <div
+                        key={p.id}
+                        className={`shrink-0 w-[120px] sm:w-[140px] p-3 rounded-xl border text-center cursor-pointer transition-colors hover:bg-muted/50 interactive-scale ${
+                          isTop
+                            ? 'bg-idm-gold-warm/5 border-idm-gold-warm/20'
+                            : 'bg-muted/30 border-border/30'
+                        }`}
+                        onClick={() => onPlayerClick?.({
+                          id: p.id,
+                          name: p.name,
+                          gamertag: p.gamertag,
+                          avatar: p.avatar,
+                          tier: p.tier,
+                          points: p.points,
+                          division: p.division,
+                        })}
+                      >
+                        <div className="relative w-10 h-10 mx-auto mb-1.5">
+                          {isTop && (
+                            <Crown className="absolute -top-2.5 left-1/2 -translate-x-1/2 w-3.5 h-3.5 text-yellow-500" />
+                          )}
+                          <div className={`w-10 h-10 rounded-full overflow-hidden border-2 ${isTop ? 'border-idm-gold-warm/40' : isMale ? 'border-idm-male/20' : 'border-idm-female/20'}`}>
+                            <AvatarMedia src={getAvatarUrl(p.gamertag, isMale ? 'male' : 'female', p.avatar)} alt={p.gamertag} fill sizes="40px" objectPosition="top" />
+                          </div>
+                        </div>
+                        <p className="text-[11px] font-bold truncate">{p.gamertag}</p>
+                        <p className="text-[10px] font-bold text-idm-gold-warm">{p.points.toLocaleString('id-ID')} pts</p>
+                        <div className="flex items-center justify-center gap-1 mt-0.5">
+                          <span className={`text-[8px] font-bold ${tierColors[p.tier] || 'text-muted-foreground'}`}>{p.tier}</span>
+                          <span className={`w-1 h-1 rounded-full ${isMale ? 'bg-idm-male' : 'bg-idm-female'}`} />
+                          <span className="text-[8px] text-muted-foreground">{p.totalWins}W</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
             {/* Achievements */}
             <div className="mb-4">
               <div className="flex items-center gap-2 mb-2">
@@ -642,13 +815,128 @@ export function ClubProfile({ club, onClose, rank, onPlayerClick }: ClubProfileP
               </div>
             </div>
 
-            {/* Recent Matches */}
-            {displayTotalMatches > 0 ? (
+            {/* ════════════════════════════════════════════════════════════
+                ENHANCED: Milestones Timeline — vertical timeline
+                ════════════════════════════════════════════════════════════ */}
+            {statsData && statsData.milestones.length > 0 && (
               <div className="mb-4">
                 <div className="flex items-center gap-2 mb-2">
-                  <Music className="w-4 h-4 text-idm-gold-warm" />
-                  <h3 className="text-sm font-semibold">Rekor Match</h3>
+                  <Award className="w-4 h-4 text-idm-gold-warm" />
+                  <h3 className="text-sm font-semibold">Milestone</h3>
+                  <Badge className="bg-idm-gold-warm/10 text-idm-gold-warm text-[8px] border-0 ml-auto">
+                    {statsData.milestones.filter((m: { achieved: boolean }) => m.achieved).length}/{statsData.milestones.length}
+                  </Badge>
                 </div>
+                <div className="relative pl-6 space-y-0">
+                  {/* Vertical timeline line */}
+                  <div className="absolute left-[9px] top-2 bottom-2 w-px bg-border" />
+                  {statsData.milestones.map((milestone: { id: string; icon: string; label: string; description: string; achieved: boolean; achievedAt: string | null }, idx: number) => (
+                    <div key={milestone.id} className="relative flex items-start gap-3 py-2">
+                      {/* Timeline dot */}
+                      <div className={`absolute left-[-18px] top-2.5 w-[18px] h-[18px] rounded-full flex items-center justify-center text-[8px] z-[1] ${
+                        milestone.achieved
+                          ? 'bg-idm-gold-warm/20 border-2 border-idm-gold-warm/50'
+                          : 'bg-muted border-2 border-border'
+                      }`}>
+                        <span className="text-[7px]">{milestone.icon}</span>
+                      </div>
+                      <div className={`flex-1 p-2.5 rounded-lg border ${
+                        milestone.achieved
+                          ? 'bg-idm-gold-warm/5 border-idm-gold-warm/15'
+                          : 'bg-muted/20 border-border/30 opacity-50'
+                      }`}>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-xs">{milestone.icon}</span>
+                          <span className={`text-[11px] font-semibold ${milestone.achieved ? 'text-idm-gold-warm' : 'text-muted-foreground'}`}>{milestone.label}</span>
+                          {milestone.achieved && (
+                            <span className="text-[8px] text-green-500 ml-auto">✓</span>
+                          )}
+                        </div>
+                        <p className="text-[9px] text-muted-foreground mt-0.5">{milestone.description}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Recent Matches — Enhanced with API data */}
+            <div className="mb-4">
+              <div className="flex items-center gap-2 mb-2">
+                <Music className="w-4 h-4 text-idm-gold-warm" />
+                <h3 className="text-sm font-semibold">Match Terbaru</h3>
+              </div>
+              {statsData && statsData.recentMatches.length > 0 ? (
+                <div className="space-y-1.5">
+                  {statsData.recentMatches.map((m: { id: string; type: string; club1Name: string; club2Name: string; score1: number | null; score2: number | null; week: number | null; round: string | null; isWin: boolean | null; seasonName: string; seasonNumber: number; division: string }) => (
+                    <div
+                      key={m.id}
+                      className={`p-2.5 rounded-lg border ${
+                        m.isWin === true
+                          ? 'bg-green-500/5 border-green-500/15'
+                          : m.isWin === false
+                          ? 'bg-red-500/5 border-red-500/15'
+                          : 'bg-muted/30 border-border/30'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        {/* Win/Loss indicator */}
+                        <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 ${
+                          m.isWin === true
+                            ? 'bg-green-500/15'
+                            : m.isWin === false
+                            ? 'bg-red-500/15'
+                            : 'bg-muted/50'
+                        }`}>
+                          {m.isWin === true ? (
+                            <Trophy className="w-3 h-3 text-green-500" />
+                          ) : m.isWin === false ? (
+                            <X className="w-3 h-3 text-red-500" />
+                          ) : (
+                            <Music className="w-3 h-3 text-muted-foreground" />
+                          )}
+                        </div>
+                        {/* Match info */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1">
+                            <span className="text-[11px] font-semibold truncate">{m.club1Name}</span>
+                            <span className="text-[9px] text-muted-foreground">vs</span>
+                            <span className="text-[11px] font-semibold truncate">{m.club2Name}</span>
+                          </div>
+                          <div className="flex items-center gap-1.5 mt-0.5">
+                            <span className="text-[9px] font-bold text-idm-gold-warm">
+                              {m.score1 ?? '-'} - {m.score2 ?? '-'}
+                            </span>
+                            {m.week && (
+                              <span className="text-[8px] text-muted-foreground">W{m.week}</span>
+                            )}
+                            {m.round && (
+                              <span className="text-[8px] text-muted-foreground">{m.round}</span>
+                            )}
+                            <span className={`text-[8px] px-1 py-0 rounded-full ${
+                              m.division === 'male'
+                                ? 'bg-idm-male/10 text-idm-male-light dark:text-[#57B5FF]'
+                                : 'bg-idm-female/10 text-idm-female-light dark:text-[#FF5C9A]'
+                            }`}>
+                              {m.division === 'male' ? '♂' : '♀'}
+                            </span>
+                          </div>
+                        </div>
+                        {/* Result label */}
+                        <Badge className={`text-[8px] border-0 ${
+                          m.isWin === true
+                            ? 'bg-green-500/10 text-green-500'
+                            : m.isWin === false
+                            ? 'bg-red-500/10 text-red-500'
+                            : 'bg-muted/50 text-muted-foreground'
+                        }`}>
+                          {m.isWin === true ? 'WIN' : m.isWin === false ? 'LOSS' : '?'}
+                        </Badge>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : displayTotalMatches > 0 ? (
                 <div className="p-4 sm:p-5 rounded-lg bg-idm-gold-warm/5 border border-idm-gold-warm/10">
                   <div className="grid grid-cols-3 gap-2 text-center">
                     <div>
@@ -665,19 +953,13 @@ export function ClubProfile({ club, onClose, rank, onPlayerClick }: ClubProfileP
                     </div>
                   </div>
                 </div>
-              </div>
-            ) : (
-              <div className="mb-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <Music className="w-4 h-4 text-idm-gold-warm" />
-                  <h3 className="text-sm font-semibold">Rekor Match</h3>
-                </div>
+              ) : (
                 <div className="p-4 rounded-lg bg-idm-gold-warm/5 border border-idm-gold-warm/10 text-center">
                   <Music className="w-5 h-5 text-idm-gold-warm mx-auto mb-1.5 opacity-40" />
                   <p className="text-xs text-muted-foreground">Belum ada match dimainkan</p>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
 
             {/* Points Breakdown */}
             <div className="p-4 sm:p-5 rounded-2xl bg-idm-gold-warm/5 border border-idm-gold-warm/10">

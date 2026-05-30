@@ -4,7 +4,7 @@ import { useAppStore, type AppView } from '@/lib/store';
 import Image from 'next/image';
 import {
   Crown, Swords, Shield, LogIn, UserCircle, LogOut, Sun, Moon, Home, Award, Target, GitBranch,
-  User, BookOpen,
+  User, BookOpen, Calendar, HelpCircle,
 } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { useSyncExternalStore, useState, useEffect, useRef } from 'react';
@@ -12,6 +12,7 @@ import { useCrossTabInvalidation } from '@/lib/cross-tab-sync';
 import { useCmsContent } from '@/lib/hooks';
 import { useScrollReveal } from './landing/shared';
 import { PublicNotifBell } from './ui/public-notif-bell';
+import { NotificationPushPermission } from './notification-push-permission';
 import dynamic from 'next/dynamic';
 
 // Lazy-loaded helpers
@@ -320,7 +321,9 @@ export function PublicPageLayout({ children, currentView }: { children: React.Re
               { view: 'bracket' as AppView, label: 'Bracket', special: false },
               { view: 'highlights' as AppView, label: 'Juara', special: true },
               { view: 'peringkat' as AppView, label: 'Peringkat', special: false },
+              { view: 'calendar' as AppView, label: 'Kalender', special: false },
               { view: 'players' as AppView, label: 'Pemain', special: false },
+              { view: 'faq' as AppView, label: 'Bantuan', special: false },
             ].map(item => (
               <button
                 key={item.view}
@@ -384,7 +387,8 @@ export function PublicPageLayout({ children, currentView }: { children: React.Re
               { view: 'hasil' as AppView, label: 'Hasil', icon: Swords, special: false },
               { view: 'highlights' as AppView, label: 'Juara', icon: Crown, special: true },
               { view: 'peringkat' as AppView, label: 'Peringkat', icon: Award, special: false },
-              { view: 'bracket' as AppView, label: 'Bracket', icon: GitBranch, special: false },
+              { view: 'calendar' as AppView, label: 'Kalender', icon: Calendar, special: false },
+              { view: 'faq' as AppView, label: 'Bantuan', icon: HelpCircle, special: false },
             ].map(item => {
               const isActive = currentView === item.view;
 
@@ -461,6 +465,9 @@ export function PublicPageLayout({ children, currentView }: { children: React.Re
           setLoginModalOpen(false);
         }}
       />
+
+      {/* ══════ PUSH NOTIFICATION PERMISSION ══════ */}
+      <NotificationPushPermission />
 
       {/* ══════ SCROLL HELPERS ══════ */}
       <ScrollProgress />

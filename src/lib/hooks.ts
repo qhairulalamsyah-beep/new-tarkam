@@ -39,12 +39,14 @@ import {
   getLiveMatchCount,
   getRecentMatches,
   getNextMatches,
+  getMatchDetail,
 } from '@/lib/queries/matches'
 import {
   getClubs,
   getClubById,
   getClubLeaderboard,
   getClubMembers,
+  getClubStats,
 } from '@/lib/queries/clubs'
 import {
   getDonations,
@@ -97,6 +99,19 @@ import {
   getWaRegistrations,
   getCloudinaryImages,
   getBackup,
+  getLiveStreams,
+  getReactions,
+  getComments,
+  getMyPredictions,
+  getMatchPredictionStats,
+  getPredictionLeaderboard,
+  getLeaderboardHistory,
+  getReferralCode,
+  generateReferralCode,
+  useReferralCode,
+  getReferralStats,
+  getWaNotifPreferences,
+  getWaNotifLog,
 } from '@/lib/queries/misc'
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -347,6 +362,16 @@ export function useNextMatches(params?: { division?: string }) {
     queryKey: ['matches-next', params?.division],
     queryFn: () => getNextMatches(params),
     staleTime: 30_000, // Tier 3 — dynamic
+  })
+}
+
+export function useMatchDetail(id: string | null, options?: HookOptions) {
+  return useQuery({
+    queryKey: ['match-detail', id],
+    queryFn: () => getMatchDetail(id!),
+    enabled: !!id,
+    staleTime: 30_000, // Tier 3 — dynamic
+    ...options,
   })
 }
 
@@ -686,6 +711,16 @@ export function useClubUnifiedProfile(clubId: string, options?: HookOptions) {
   })
 }
 
+export function useClubStats(clubId: string, options?: HookOptions) {
+  return useQuery({
+    queryKey: ['club-stats', clubId],
+    queryFn: () => getClubStats(clubId),
+    enabled: !!clubId,
+    staleTime: 120_000, // Tier 2 — semi-stable
+    ...options,
+  })
+}
+
 export function useTournamentSponsors(tournamentId: string, options?: HookOptions) {
   return useQuery({
     queryKey: ['tournament-sponsors', tournamentId],
@@ -738,6 +773,136 @@ export function useBackup(options?: HookOptions) {
     queryKey: ['backup'],
     queryFn: () => getBackup(),
     staleTime: 120_000, // Tier 2 — semi-static
+    ...options,
+  })
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// Live Stream Hooks
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+export function useLiveStreams(params?: { division?: string; liveOnly?: boolean; limit?: number }, options?: HookOptions) {
+  return useQuery({
+    queryKey: ['livestreams', params?.division, params?.liveOnly, params?.limit],
+    queryFn: () => getLiveStreams(params),
+    staleTime: 30_000, // Tier 3 — dynamic (live status changes frequently)
+    refetchInterval: params?.liveOnly ? 60_000 : false, // Poll every 60s when filtering live only
+    refetchIntervalInBackground: false,
+    ...options,
+  })
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// Reaction & Comment Hooks
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+export function useReactions(params: { targetType: string; targetId: string }, options?: HookOptions) {
+  return useQuery({
+    queryKey: ['reactions', params.targetType, params.targetId],
+    queryFn: () => getReactions(params),
+    enabled: !!params.targetType && !!params.targetId,
+    staleTime: 15_000, // Tier 4 — very dynamic (reactions change quickly)
+    ...options,
+  })
+}
+
+export function useComments(params: { targetType: string; targetId: string; cursor?: string; limit?: number }, options?: HookOptions) {
+  return useQuery({
+    queryKey: ['comments', params.targetType, params.targetId, params.cursor, params.limit],
+    queryFn: () => getComments(params),
+    enabled: !!params.targetType && !!params.targetId,
+    staleTime: 15_000, // Tier 4 — very dynamic
+    ...options,
+  })
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// Prediction Hooks
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+export function useMyPredictions(matchId?: string, options?: HookOptions) {
+  return useQuery({
+    queryKey: ['my-predictions', matchId],
+    queryFn: () => getMyPredictions(matchId),
+    staleTime: 30_000, // Tier 3 — dynamic
+    ...options,
+  })
+}
+
+export function useMatchPredictionStats(matchId: string | null, options?: HookOptions) {
+  return useQuery({
+    queryKey: ['match-prediction-stats', matchId],
+    queryFn: () => getMatchPredictionStats(matchId!),
+    enabled: !!matchId,
+    staleTime: 30_000, // Tier 3 — dynamic
+    ...options,
+  })
+}
+
+export function usePredictionLeaderboard(limit?: number, options?: HookOptions) {
+  return useQuery({
+    queryKey: ['prediction-leaderboard', limit],
+    queryFn: () => getPredictionLeaderboard(limit),
+    staleTime: 120_000, // Tier 2 — semi-stable
+    ...options,
+  })
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// Historical Leaderboard Hooks
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+export function useLeaderboardHistory(params: { seasonId: string; division?: string; weekNumber?: number }, options?: HookOptions) {
+  return useQuery({
+    queryKey: ['leaderboard-history', params.seasonId, params.division, params.weekNumber],
+    queryFn: () => getLeaderboardHistory(params),
+    enabled: !!params.seasonId,
+    staleTime: 120_000, // Tier 2 — semi-stable (historical data doesn't change often)
+    placeholderData: (prev) => prev,
+    ...options,
+  })
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// Referral Hooks
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+export function useReferralCode(options?: HookOptions) {
+  return useQuery({
+    queryKey: ['referral-code'],
+    queryFn: () => getReferralCode(),
+    staleTime: 60_000, // Tier 2 — semi-stable
+    ...options,
+  })
+}
+
+export function useReferralStats(options?: HookOptions) {
+  return useQuery({
+    queryKey: ['referral-stats'],
+    queryFn: () => getReferralStats(),
+    staleTime: 30_000, // Tier 3 — dynamic
+    ...options,
+  })
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// WhatsApp Notification Hooks
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+export function useWaNotifPreferences(options?: HookOptions) {
+  return useQuery({
+    queryKey: ['wa-notif-preferences'],
+    queryFn: () => getWaNotifPreferences(),
+    staleTime: 30_000, // Tier 3 — dynamic
+    ...options,
+  })
+}
+
+export function useWaNotifLog(params?: { type?: string; status?: string; limit?: number; offset?: number }, options?: HookOptions) {
+  return useQuery({
+    queryKey: ['wa-notif-log', params?.type, params?.status, params?.limit, params?.offset],
+    queryFn: () => getWaNotifLog(params),
+    staleTime: 30_000, // Tier 3 — dynamic
     ...options,
   })
 }

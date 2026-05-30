@@ -62,6 +62,12 @@ const HighlightsPage = dynamic(() => import('./highlights-page').then(m => ({ de
 const PeringkatPage = dynamic(() => import('./peringkat-page').then(m => ({ default: m.PeringkatPage })), {
   loading: () => viewLoading,
 });
+const CalendarPage = dynamic(() => import('./calendar-page').then(m => ({ default: m.CalendarPage })), {
+  loading: () => viewLoading,
+});
+const FaqPage = dynamic(() => import('./faq-page').then(m => ({ default: m.FaqPage })), {
+  loading: () => viewLoading,
+});
 
 /* ─── ★ LandingPage: Direct import (NOT dynamic) to prevent FOUC on skinMap ───
    Previously used dynamic() which caused a blank loading placeholder to flash
@@ -534,7 +540,7 @@ export function AppShell() {
   }, [setOnboardingOpen]);
 
   /* ═══ Define which views are "public" (landing-style layout) vs "dashboard" (sidebar layout) ═══ */
-  const publicViews: AppView[] = ['players', 'highlights', 'peringkat', 'bracket', 'hasil'];
+  const publicViews: AppView[] = ['players', 'highlights', 'peringkat', 'bracket', 'hasil', 'calendar', 'faq'];
   const isPublicView = publicViews.includes(currentView);
 
   // Landing page is standalone - no sidebar/header
@@ -563,6 +569,8 @@ export function AppShell() {
         case 'players': return <PlayersPage />;
         case 'highlights': return <HighlightsPage />;
         case 'peringkat': return <PeringkatPage />;
+        case 'calendar': return <CalendarPage />;
+        case 'faq': return <FaqPage />;
         case 'bracket': return <BracketPage />;
         case 'hasil': return <HasilPage />;
         default: return <HasilPage />;
@@ -628,6 +636,8 @@ export function AppShell() {
                 players: 'Pemain',
                 highlights: 'Juara',
                 peringkat: 'Peringkat',
+                calendar: 'Kalender',
+                faq: 'Bantuan',
               }[currentView as string] || ''}</span>
             )}
           </span>
@@ -699,7 +709,7 @@ export function AppShell() {
               const content = <div key={currentView} className="h-full">{renderView()}</div>;
               return content;
             }
-            const isFullBleed = currentView === 'bracket' || currentView === 'hasil' || currentView === 'players' || currentView === 'highlights' ;
+            const isFullBleed = currentView === 'bracket' || currentView === 'hasil' || currentView === 'players' || currentView === 'highlights' || currentView === 'calendar' || currentView === 'faq';
             const contentClass = `pt-2 ${isFullBleed ? 'px-0' : 'px-3'} pb-28 sm:pt-6 sm:px-4 sm:pb-28 lg:p-8 lg:pb-8 ${isFullBleed ? 'max-w-7xl' : 'max-w-[1600px]'} mx-auto page-transition-enter`;
             const content = <div key={currentView} className={contentClass}>{renderView()}</div>;
             return isMobile

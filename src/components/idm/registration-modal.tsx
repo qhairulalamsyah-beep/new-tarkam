@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import {
-  UserPlus, X, Loader2, MapPin, Phone, Users, Music, CheckCircle2, AlertTriangle, Ban, Info, ChevronDown, ChevronUp, Clock, Lock, Eye, EyeOff
+  UserPlus, X, Loader2, MapPin, Phone, Users, Music, CheckCircle2, AlertTriangle, Ban, Info, ChevronDown, ChevronUp, Clock, Lock, Eye, EyeOff, Gift
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -48,6 +48,7 @@ export function RegistrationModal({ open, onClose, defaultDivision }: Registrati
     phone: '',
     city: '',
     clubProfileId: '',
+    referralCode: '',
   });
   const [createAccount, setCreateAccount] = useState(false);
   const [password, setPassword] = useState('');
@@ -90,6 +91,16 @@ export function RegistrationModal({ open, onClose, defaultDivision }: Registrati
     queryFn: () => getStats(division),
     enabled: open,
   });
+
+  // Auto-fill referral code from URL ?ref=CODE
+  useEffect(() => {
+    if (!open) return;
+    const urlParams = new URLSearchParams(window.location.search);
+    const refCode = urlParams.get('ref');
+    if (refCode && refCode.startsWith('TARKAM-')) {
+      setFormData(prev => ({ ...prev, referralCode: refCode }));
+    }
+  }, [open]);
 
   // Determine if registration is open for the selected division
   const tournamentStatus = stats?.activeTournament?.status;
@@ -158,6 +169,7 @@ export function RegistrationModal({ open, onClose, defaultDivision }: Registrati
           division,
           force,
           ...(createAccount && password ? { password } : {}),
+          ...(formData.referralCode ? { referralCode: formData.referralCode } : {}),
         }),
       });
 
@@ -217,7 +229,7 @@ export function RegistrationModal({ open, onClose, defaultDivision }: Registrati
           message: data.message,
           gamertag: data.player?.gamertag || data.tournament?.name,
         });
-        setFormData({ name: '', joki: '', phone: '', city: '', clubProfileId: '' });
+        setFormData({ name: '', joki: '', phone: '', city: '', clubProfileId: '', referralCode: '' });
         setPassword('');
         setConfirmPassword('');
         setWarningState(null);
@@ -278,6 +290,7 @@ export function RegistrationModal({ open, onClose, defaultDivision }: Registrati
           reRegisterPlayerId,
           isApprovedPlayer,
           ...(createAccount && password ? { password } : {}),
+          ...(formData.referralCode ? { referralCode: formData.referralCode } : {}),
         }),
       });
 
@@ -289,7 +302,7 @@ export function RegistrationModal({ open, onClose, defaultDivision }: Registrati
           message: data.message,
           gamertag: data.player?.gamertag || data.tournament?.name,
         });
-        setFormData({ name: '', joki: '', phone: '', city: '', clubProfileId: '' });
+        setFormData({ name: '', joki: '', phone: '', city: '', clubProfileId: '', referralCode: '' });
         setPassword('');
         setConfirmPassword('');
         setWarningState(null);
@@ -325,7 +338,7 @@ export function RegistrationModal({ open, onClose, defaultDivision }: Registrati
   };
 
   const handleClose = () => {
-    setFormData({ name: '', joki: '', phone: '', city: '', clubProfileId: '' });
+    setFormData({ name: '', joki: '', phone: '', city: '', clubProfileId: '', referralCode: '' });
     setPassword('');
     setConfirmPassword('');
     setCreateAccount(false);
@@ -929,6 +942,27 @@ export function RegistrationModal({ open, onClose, defaultDivision }: Registrati
                       <p className="text-[10px] text-idm-gold-warm mt-1 flex items-center gap-1">
                         <Info className="w-3 h-3 shrink-0" />
                         Club anda belum ada dalam daftar list club? Hubungi admin untuk membuat club
+                      </p>
+                    </div>
+
+                    {/* Referral Code */}
+                    <div>
+                      <label className="text-xs font-semibold text-muted-foreground mb-1.5 block">
+                        Kode Referral <span className="text-muted-foreground/70 text-[10px]">(opsional)</span>
+                      </label>
+                      <div className="relative">
+                        <Gift className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-idm-gold-warm" />
+                        <Input
+                          placeholder="TARKAM-XXXXXX"
+                          value={formData.referralCode}
+                          onChange={(e) => setFormData(p => ({ ...p, referralCode: e.target.value.toUpperCase() }))}
+                          className="pl-9 glass border-idm-gold-warm/20 focus:border-idm-gold-warm/40"
+                          maxLength={20}
+                        />
+                      </div>
+                      <p className="text-[10px] text-idm-gold-warm mt-1 flex items-center gap-1">
+                        <Gift className="w-3 h-3 shrink-0" />
+                        Masukkan kode referral teman untuk bonus poin!
                       </p>
                     </div>
 

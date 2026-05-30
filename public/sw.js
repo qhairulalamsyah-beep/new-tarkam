@@ -24,6 +24,78 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
+// ═══════════════════════════════════════════════════════════
+// PUSH NOTIFICATION SUPPORT
+// ═══════════════════════════════════════════════════════════
+
+// Handle incoming push events — show notification
+self.addEventListener('push', (event) => {
+  let data = {
+    title: 'TARKAM IDM',
+    body: 'Ada update baru!',
+    icon: '/logo.webp',
+    url: '/',
+    tag: 'idm-notification',
+  };
+
+  try {
+    if (event.data) {
+      const parsed = event.data.json();
+      data = { ...data, ...parsed };
+    }
+  } catch (e) {
+    // Fallback to defaults if data parsing fails
+    console.warn('[SW] Push data parse error, using defaults', e);
+  }
+
+  const options = {
+    body: data.body,
+    icon: data.icon || '/logo.webp',
+    badge: '/logo.webp',
+    tag: data.tag || 'idm-notification',
+    data: {
+      url: data.url || '/',
+    },
+    vibrate: [100, 50, 100],
+    actions: [
+      { action: 'open', title: 'Buka' },
+      { action: 'dismiss', title: 'Tutup' },
+    ],
+  };
+
+  event.waitUntil(
+    self.registration.showNotification(data.title, options)
+  );
+});
+
+// Handle notification click — open/focus the app window
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+
+  const targetUrl = event.notification.data?.url || '/';
+
+  if (event.action === 'dismiss') return;
+
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      // Try to find an existing window and focus it
+      for (const client of clientList) {
+        if (client.url.includes(self.location.origin) && 'focus' in client) {
+          // Navigate to the target URL and focus
+          client.navigate(targetUrl);
+          return client.focus();
+        }
+      }
+      // No existing window — open a new one
+      return self.clients.openWindow(targetUrl);
+    })
+  );
+});
+
+// ═══════════════════════════════════════════════════════════
+// FETCH STRATEGY (existing)
+// ═══════════════════════════════════════════════════════════
+
 // Fetch strategy:
 // - API calls: network-only (never cache)
 // - HTML page: network-first (always try fresh, fallback to cache only when offline)

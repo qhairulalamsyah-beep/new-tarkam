@@ -51,6 +51,7 @@ model Player {
   marketplaceItems MarketplaceItem[]
   seasonStats      PlayerSeasonStats[]
   donations        Donation[]
+  prizeClaims      PrizeClaim[]
 
   @@index([division])
   @@index([division, isActive])
@@ -146,6 +147,7 @@ model Tournament {
   sponsors            TournamentSponsor[]
   sponsoredPrizes     SponsoredPrize[]
   waRegistrations     WaRegistration[]
+  liveStreams         LiveStream[]
 
   @@unique([weekNumber, division, seasonId])
   @@index([division, seasonId])
@@ -207,6 +209,7 @@ model Match {
   loser       Team?      @relation("MatchLoser", fields: [loserId], references: [id], onDelete: SetNull)
   mvpPlayer   Player?    @relation("MvpPlayer", fields: [mvpPlayerId], references: [id], onDelete: SetNull)
   pointRecords PlayerPoint[]
+  predictions  Prediction[]
 
   @@index([tournamentId])
   @@index([status])
@@ -295,8 +298,17 @@ model Account {
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
 
-  player Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
-  skins  PlayerSkin[]
+  player           Player            @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  skins            PlayerSkin[]
+  notifications    Notification[]
+  pushSubscriptions PushSubscription[]
+  prizeClaims       PrizeClaim[]
+  predictions      Prediction[]
+  reactions        Reaction[]
+  comments         Comment[]
+  referralCode     ReferralCode?
+  referrals        Referral[]    @relation("ReferredBy")
+  notifPreference  NotifPreference?
 
   @@index([username])
   @@index([email])
@@ -778,4 +790,250 @@ model WhatsAppLog {
   @@index([type])
   @@index([createdAt])
   @@index([sender])
+}
+
+// ============================================
+// IDM LEAGUE - PUSH NOTIFICATIONS
+// ============================================
+
+model PushSubscription {
+  id          String   @id @default(cuid())
+  accountId   String?
+  endpoint    String   @unique
+  p256dh      String
+  auth        String
+  userAgent   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  account Account? @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@index([accountId])
+}
+
+model Notification {
+  id          String   @id @default(cuid())
+  type        String   // tournament_start, match_result, prize_claim, prediction, system
+  title       String
+  body        String
+  url         String?
+  icon        String?
+  isRead      Boolean  @default(false)
+  accountId   String?
+  createdAt   DateTime @default(now())
+
+  account Account? @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@index([accountId])
+  @@index([isRead])
+  @@index([type])
+  @@index([createdAt])
+}
+
+// ============================================
+// IDM LEAGUE - PRIZE CLAIM SYSTEM
+// ============================================
+
+model PrizeClaim {
+  id          String    @id @default(cuid())
+  prizeId     String    // Link to TournamentPrize or SponsoredPrize
+  prizeType   String    @default("tournament_prize") // "tournament_prize" | "sponsored_prize"
+  tournamentId String?  // Convenience: direct link to tournament
+  playerId    String    // Who is claiming
+  accountId   String?   // Optional: if they have an account
+  status      String    @default("pending") // pending, verified, processing, shipped, completed, rejected
+  claimMethod String    @default("whatsapp") // whatsapp, manual
+  contactInfo String?   // Phone number or address
+  notes       String?   // Admin notes
+  claimedAt   DateTime  @default(now())
+  verifiedAt  DateTime?
+  completedAt DateTime?
+
+  player      Player    @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  account     Account?  @relation(fields: [accountId], references: [id], onDelete: SetNull)
+
+  @@index([playerId])
+  @@index([prizeId])
+  @@index([status])
+  @@index([tournamentId])
+  @@index([accountId])
+  @@index([claimedAt])
+}
+
+// ============================================
+// IDM LEAGUE - LIVE STREAM
+// ============================================
+
+model LiveStream {
+  id           String    @id @default(cuid())
+  title        String
+  platform     String    // "youtube" | "twitch"
+  streamUrl    String    // Full URL
+  videoId      String?   // YouTube video ID or Twitch video ID
+  channelId    String?   // For Twitch channel embed
+  isLive       Boolean   @default(false)
+  startedAt    DateTime?
+  division     String?   // "male" | "female" | null (for both)
+  tournamentId String?
+  thumbnail    String?   // Custom thumbnail URL
+  viewerCount  Int?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  tournament Tournament? @relation(fields: [tournamentId], references: [id], onDelete: SetNull)
+
+  @@index([isLive])
+  @@index([platform])
+  @@index([division])
+  @@index([tournamentId])
+  @@index([createdAt])
+}
+
+// ============================================
+// IDM LEAGUE - REACTIONS & COMMENTS
+// ============================================
+
+model Reaction {
+  id          String   @id @default(cuid())
+  type        String   // fire, heart, clap, laugh, shock, trophy
+  targetType  String   // match, tournament, player, highlight
+  targetId    String   // ID of the target entity
+  playerId    String?
+  accountId   String?
+  createdAt   DateTime @default(now())
+
+  account Account? @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  // Unique: one reaction per user per target per type
+  @@unique([targetType, targetId, accountId, type])
+  @@index([targetType, targetId])
+  @@index([accountId])
+  @@index([createdAt])
+}
+
+model Comment {
+  id          String   @id @default(cuid())
+  content     String
+  targetType  String   // match, tournament, player, highlight
+  targetId    String   // ID of the target entity
+  playerId    String?
+  accountId   String?
+  parentId    String?  // For replies
+  isDeleted   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  account  Account?  @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  parent   Comment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies  Comment[] @relation("CommentReplies")
+
+  @@index([targetType, targetId])
+  @@index([accountId])
+  @@index([parentId])
+  @@index([createdAt])
+}
+
+// ============================================
+// IDM LEAGUE - MATCH PREDICTION SYSTEM
+// ============================================
+
+model Prediction {
+  id                String    @id @default(cuid())
+  accountId         String
+  matchId           String
+  predictedWinnerId String    // Team ID predicted to win
+  isCorrect         Boolean?
+  pointsEarned      Int       @default(0)
+  createdAt         DateTime  @default(now())
+
+  account Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  match    Match    @relation(fields: [matchId], references: [id], onDelete: Cascade)
+
+  @@unique([accountId, matchId])
+  @@index([accountId])
+  @@index([matchId])
+  @@index([predictedWinnerId])
+  @@index([isCorrect])
+  @@index([createdAt])
+}
+
+// ============================================
+// IDM LEAGUE - WHATSAPP NOTIFICATION PREFERENCES
+// ============================================
+
+model NotifPreference {
+  id              String   @id @default(cuid())
+  accountId       String?  @unique
+  playerId        String?
+  whatsapp        String?
+  enableTournament Boolean @default(true)
+  enableMatch      Boolean @default(true)
+  enableResult     Boolean @default(true)
+  enablePrize      Boolean @default(true)
+  enableSeason     Boolean @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  account         Account? @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@index([playerId])
+  @@index([whatsapp])
+}
+
+// ============================================
+// IDM LEAGUE - WHATSAPP NOTIFICATION LOG
+// ============================================
+
+model WaNotifLog {
+  id          String   @id @default(cuid())
+  type        String   // "tournament" | "match" | "result" | "prize" | "season" | "test"
+  targetId    String?  // playerId or accountId
+  waNumber    String?  // recipient WhatsApp number
+  message     String   // message content
+  status      String   @default("pending") // "pending" | "sent" | "failed" | "rate_limited"
+  error       String?  // error message if failed
+  createdAt   DateTime @default(now())
+
+  @@index([type])
+  @@index([targetId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+// ============================================
+// IDM LEAGUE - REFERRAL SYSTEM
+// ============================================
+
+model ReferralCode {
+  id          String   @id @default(cuid())
+  code        String   @unique  // Short unique code like "TARKAM-ABC123"
+  accountId   String   @unique
+  uses        Int      @default(0)
+  maxUses     Int      @default(100)
+  createdAt   DateTime @default(now())
+
+  account     Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  referrals   Referral[]
+
+  @@index([code])
+  @@index([accountId])
+}
+
+model Referral {
+  id                String    @id @default(cuid())
+  referrerCodeId    String    // The referral code used
+  referredAccountId String?   // The new user who was referred
+  referredEmail     String?   // Or phone/gamertag
+  status            String    @default("pending") // pending, registered, rewarded
+  rewardPoints      Int       @default(0)
+  createdAt         DateTime  @default(now())
+  completedAt       DateTime?
+
+  referralCode      ReferralCode @relation(fields: [referrerCodeId], references: [id], onDelete: Cascade)
+  referredAccount   Account?     @relation("ReferredBy", fields: [referredAccountId], references: [id], onDelete: SetNull)
+
+  @@index([referrerCodeId])
+  @@index([referredAccountId])
+  @@index([status])
+  @@index([createdAt])
 }
