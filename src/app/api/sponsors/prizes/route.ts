@@ -95,11 +95,24 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Prize ID is required' }, { status: 400 });
     }
 
-    await db.sponsoredPrize.delete({
-      where: { id },
-    });
-
-    return NextResponse.json({ success: true });
+    // Retry for Neon PostgreSQL connection drops
+    let lastError: unknown;
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      try {
+        await db.sponsoredPrize.delete({ where: { id } });
+        return NextResponse.json({ success: true });
+      } catch (err: unknown) {
+        lastError = err;
+        const errMsg = err instanceof Error ? err.message : String(err);
+        if (errMsg.includes('Closed') || errMsg.includes('Timed out') || errMsg.includes('ECONNRESET') || errMsg.includes('Connection')) {
+          console.warn(`[prizes DELETE] Retry ${attempt}/3 — connection error: ${errMsg}`);
+          if (attempt < 3) await new Promise(r => setTimeout(r, 1000 * attempt));
+          continue;
+        }
+        throw err;
+      }
+    }
+    throw lastError;
   } catch (error) {
     console.error('Error deleting sponsored prize:', error);
     return NextResponse.json({ error: 'Failed to delete sponsored prize' }, { status: 500 });
