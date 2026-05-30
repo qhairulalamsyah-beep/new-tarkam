@@ -2,10 +2,9 @@
 
 import React, { useState, useMemo, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Calendar, ChevronLeft, ChevronRight, Clock, MapPin, Trophy, Users, Music, Shield } from 'lucide-react';
+import { Calendar, ChevronLeft, ChevronRight, Clock, Trophy, Users, Music, Shield, X } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { smartRefetchInterval } from '@/lib/smart-polling';
-import { hexToRgba } from '@/lib/utils';
 
 /* ═══════════════════════════════════════════
    Types
@@ -185,7 +184,7 @@ function MonthCalendarGrid({
       <div className="grid grid-cols-7 gap-0.5">
         {cells.map((day, idx) => {
           if (day === null) {
-            return <div key={`empty-${idx}`} className="aspect-square" />;
+            return <div key={`empty-${idx}`} className="h-14 sm:h-16" />;
           }
 
           const dayTournaments = tournamentsByDay[day] || [];
@@ -195,11 +194,15 @@ function MonthCalendarGrid({
           const hasFemale = dayTournaments.some(t => t.division === 'female');
           const hasTournament = dayTournaments.length > 0;
 
+          // Get unique week numbers per division for label
+          const maleWeeks = [...new Set(dayTournaments.filter(t => t.division === 'male').map(t => t.weekNumber))];
+          const femaleWeeks = [...new Set(dayTournaments.filter(t => t.division === 'female').map(t => t.weekNumber))];
+
           return (
             <button
               key={day}
               onClick={() => hasTournament && onDayClick(day)}
-              className={`aspect-square flex flex-col items-center justify-center rounded-xl transition-all duration-200 relative ${
+              className={`h-14 sm:h-16 flex flex-col items-center justify-start pt-1.5 rounded-xl transition-all duration-200 relative ${
                 hasTournament
                   ? 'cursor-pointer hover:bg-idm-gold-warm/10 active:scale-95'
                   : 'cursor-default'
@@ -213,7 +216,7 @@ function MonthCalendarGrid({
                   : ''
               }`}
             >
-              <span className={`text-xs font-semibold ${
+              <span className={`text-[11px] font-semibold leading-none ${
                 isToday
                   ? 'text-idm-gold-warm'
                   : hasTournament
@@ -222,20 +225,24 @@ function MonthCalendarGrid({
               }`}>
                 {day}
               </span>
-              {/* Tournament dots */}
+              {/* Tournament labels with division color */}
               {hasTournament && (
-                <div className="flex items-center gap-0.5 mt-0.5">
-                  {hasMale && (
-                    <div className="w-1.5 h-1.5 rounded-full bg-idm-male" />
+                <div className="flex flex-col items-center gap-0.5 mt-0.5 w-full px-0.5 overflow-hidden">
+                  {hasMale && maleWeeks.length > 0 && (
+                    <div className="flex items-center gap-0.5 bg-idm-male/15 text-idm-male-light border border-idm-male/20 rounded px-1 py-px w-full justify-center">
+                      <span className="text-[7px] sm:text-[8px] font-bold leading-none truncate">♂ W{maleWeeks.join(',')}</span>
+                    </div>
                   )}
-                  {hasFemale && (
-                    <div className="w-1.5 h-1.5 rounded-full bg-idm-female" />
+                  {hasFemale && femaleWeeks.length > 0 && (
+                    <div className="flex items-center gap-0.5 bg-idm-female/15 text-idm-female-light border border-idm-female/20 rounded px-1 py-px w-full justify-center">
+                      <span className="text-[7px] sm:text-[8px] font-bold leading-none truncate">♀ W{femaleWeeks.join(',')}</span>
+                    </div>
                   )}
                 </div>
               )}
               {/* Today indicator */}
-              {isToday && (
-                <div className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-idm-gold-warm" />
+              {isToday && !hasTournament && (
+                <div className="absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-idm-gold-warm" />
               )}
             </button>
           );
@@ -348,12 +355,14 @@ function SelectedDayDetail({
   day,
   tournaments,
   divisionFilter,
+  onClose,
 }: {
   year: number;
   month: number;
   day: number;
   tournaments: CalendarTournament[];
   divisionFilter: DivisionFilter;
+  onClose?: () => void;
 }) {
   const dayTournaments = tournaments.filter(t => {
     const dateStr = t.startAt || t.scheduledAt;
@@ -375,14 +384,23 @@ function SelectedDayDetail({
   });
 
   return (
-    <div className="rounded-[20px] border border-idm-gold-warm/15 bg-card/60 overflow-hidden mb-4">
-      <div className="px-4 py-2.5 border-b border-idm-gold-warm/10 bg-idm-gold-warm/[0.03]">
+    <div className="rounded-[20px] border border-idm-gold-warm/15 bg-card/60 overflow-hidden animate-in fade-in-0 slide-in-from-right-2 duration-200">
+      <div className="px-4 py-2.5 border-b border-idm-gold-warm/10 bg-idm-gold-warm/[0.03] flex items-center justify-between">
         <h4 className="text-xs font-bold text-idm-gold-warm flex items-center gap-1.5">
           <Calendar className="w-3.5 h-3.5" />
           {dateLabel}
         </h4>
+        {onClose && (
+          <button
+            onClick={onClose}
+            className="w-5 h-5 rounded-md flex items-center justify-center text-muted-foreground/50 hover:text-foreground hover:bg-muted/40 transition-all cursor-pointer"
+            aria-label="Tutup"
+          >
+            <X className="w-3 h-3" />
+          </button>
+        )}
       </div>
-      <div className="p-3 space-y-2">
+      <div className="p-3 space-y-2 max-h-[400px] overflow-y-auto custom-scrollbar">
         {dayTournaments.map(t => (
           <TournamentCard key={t.id} tournament={t} />
         ))}
@@ -542,9 +560,9 @@ export function CalendarPage() {
               <div className="p-3 sm:p-4">
                 {isLoading ? (
                   <div className="space-y-2 animate-pulse">
-                    <div className="grid grid-cols-7 gap-1">
+                    <div className="grid grid-cols-7 gap-0.5">
                       {Array.from({ length: 35 }).map((_, i) => (
-                        <div key={i} className="aspect-square rounded-xl bg-muted/20" />
+                        <div key={i} className="h-14 sm:h-16 rounded-xl bg-muted/20" />
                       ))}
                     </div>
                   </div>
@@ -562,12 +580,12 @@ export function CalendarPage() {
               {/* Legend */}
               <div className="flex items-center gap-4 px-4 pb-3 pt-1 border-t border-idm-gold-warm/5">
                 <div className="flex items-center gap-1">
-                  <div className="w-2 h-2 rounded-full bg-idm-male" />
-                  <span className="text-[9px] text-muted-foreground/60">Cowo</span>
+                  <div className="w-2 h-2 rounded-full bg-idm-male/80" />
+                  <span className="text-[9px] text-muted-foreground/60">♂ Cowo</span>
                 </div>
                 <div className="flex items-center gap-1">
-                  <div className="w-2 h-2 rounded-full bg-idm-female" />
-                  <span className="text-[9px] text-muted-foreground/60">Cewe</span>
+                  <div className="w-2 h-2 rounded-full bg-idm-female/80" />
+                  <span className="text-[9px] text-muted-foreground/60">♀ Cewe</span>
                 </div>
                 <div className="flex items-center gap-1">
                   <div className="w-1 h-1 rounded-full bg-idm-gold-warm" />
@@ -575,8 +593,11 @@ export function CalendarPage() {
                 </div>
               </div>
             </div>
+          </div>
 
-            {/* Selected Day Detail */}
+          {/* ═══ Right Panel — Detail & Upcoming ═══ */}
+          <div className="space-y-3">
+            {/* Selected Day Detail — shown on right side */}
             {selectedDay !== null && (
               <SelectedDayDetail
                 year={year}
@@ -584,12 +605,10 @@ export function CalendarPage() {
                 day={selectedDay}
                 tournaments={data?.tournaments || []}
                 divisionFilter={divisionFilter}
+                onClose={() => setSelectedDay(null)}
               />
             )}
-          </div>
 
-          {/* ═══ Upcoming List — Right Column ═══ */}
-          <div className="space-y-3">
             <div className="flex items-center gap-2 mb-1">
               <Clock className="w-4 h-4 text-idm-gold-warm" />
               <h3 className="text-sm font-bold text-foreground">Akan Datang</h3>
