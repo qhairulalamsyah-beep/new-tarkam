@@ -54,7 +54,8 @@ Di sini kamu bisa:
     question: 'Siapa yang bisa berpartisipasi?',
     answer: `Semua orang bisa berpartisipasi di Tarkam IDM! Syarat utamanya:
 <ul class="list-disc pl-5 mt-2 space-y-1">
-<li>Memiliki akun yang terdaftar di platform Tarkam IDM</li>
+<li>Memiliki device komputer (PC), Laptop, Tablet, Mobile Gadget (HP).</li>
+<li>Memiliki akun yang terdaftar di game Idol Meta</li>
 <li>Memilih divisi: <strong>♂ Cowo</strong> (untuk pemain laki-laki) atau <strong>♀ Cewe</strong> (untuk pemain perempuan)</li>
 <li>Bersedia mengikuti aturan dan jadwal turnamen</li>
 </ul>
