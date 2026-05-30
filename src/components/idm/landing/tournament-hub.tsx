@@ -821,6 +821,7 @@ function TournamentCard({
               title="Lihat list peserta"
             >
               <Users className="w-3 h-3" />
+              <span>Lihat</span>
               <span className="tabular-nums">{pesertaCounts.approved}</span>
               {pesertaCounts.pending > 0 && (
                 <span className="text-amber-400 tabular-nums">+{pesertaCounts.pending}</span>
