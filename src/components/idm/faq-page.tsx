@@ -624,7 +624,7 @@ export function FaqPage() {
 
               {/* Email */}
               <a
-                href="mailto:admin@tarkamidm.com"
+                href="mailto:qhairulalamsyah@gmail.com"
                 className="flex items-center gap-2.5 px-5 py-3 rounded-xl bg-idm-gold-warm/10 border border-idm-gold-warm/25 text-idm-gold-warm hover:bg-idm-gold-warm/20 hover:border-idm-gold-warm/40 transition-all duration-200 w-full sm:w-auto"
               >
                 <Mail className="w-5 h-5 shrink-0" />

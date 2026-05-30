@@ -5,7 +5,7 @@ export const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || '';
 
 export const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY || '';
 
-export const vapidSubject = process.env.VAPID_SUBJECT || 'mailto:tarkam-idm@localhost';
+export const vapidSubject = process.env.VAPID_SUBJECT || 'mailto:qhairulalamsyah@gmail.com';
 
 export function isPushConfigured(): boolean {
   return !!(vapidPublicKey && vapidPrivateKey);
