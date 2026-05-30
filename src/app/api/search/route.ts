@@ -41,7 +41,6 @@ export async function GET(request: NextRequest) {
   });
 
   // Search Clubs — by profile name (contains)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const clubs: any = await db.clubProfile.findMany({
     where: {
       name: { contains: q },
