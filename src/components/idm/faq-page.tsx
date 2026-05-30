@@ -366,25 +366,19 @@ Tips mencegah lupa password:
     id: 'akun-3',
     category: 'akun',
     question: 'Bagaimana cara mengubah profil?',
-    answer: `Untuk mengubah profil di Tarkam IDM:
-
-<ol class="list-decimal pl-5 mt-2 space-y-1">
-<li><strong>Login</strong> ke akun kamu</li>
-<li>Klik avatar/nama kamu di kanan atas</li>
-<li>Pilih <strong>"Lihat Profil"</strong> dari dropdown menu</li>
-<li>Di halaman profil, kamu bisa mengubah:</li>
-</ol>
+    answer: `Untuk mengubah profil di Tarkam IDM, hubungi admin melalui Discord atau WhatsApp. Admin dapat membantu mengubah:
 
 <ul class="list-disc pl-5 mt-2 space-y-1">
-<li>Gamertag (nama tampilan)</li>
+<li>Nama lengkap</li>
 <li>Avatar (foto profil)</li>
 <li>Kota/lokasi</li>
+<li>Nomor WhatsApp</li>
 </ul>
 
 Perhatikan:
 <ul class="list-disc pl-5 mt-2 space-y-1">
+<li><strong>Gamertag</strong> (nama tampilan) hanya bisa diubah oleh admin</li>
 <li>Divisi (Cowo/Cewe) tidak bisa diubah setelah pendaftaran</li>
-<li>Perubahan gamertag mungkin memerlukan persetujuan admin</li>
 <li>Avatar harus sesuai dengan ketentuan komunitas</li>
 </ul>`,
   },
