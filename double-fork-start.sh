@@ -7,7 +7,7 @@
 cd /home/z/my-project
 
 # Fix .env (sandbox resets this)
-echo "DATABASE_URL=postgresql://neondb_owner:npg_i6O1uYUDmyZS@ep-dry-waterfall-aofsy5ty-pooler.c-2.ap-southeast-1.aws.neon.tech/neondb?sslmode=require" > .env
+echo "DATABASE_URL=postgresql://neondb_owner:npg_i6O1uYUDmyZS@ep-wispy-fire-ao8jbmss-pooler.c-2.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require" > .env
 
 # ── FIRST FORK ──
 (

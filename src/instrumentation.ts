@@ -11,7 +11,7 @@ export async function register() {
     // ═══════════════════════════════════════════════════════════
     // Turbopack may not load .env before Prisma validates the datasource.
     // We force-set it here to guarantee Prisma can connect.
-    const NEON_URL = 'postgresql://neondb_owner:npg_i6O1uYUDmyZS@ep-dry-waterfall-aofsy5ty-pooler.c-2.ap-southeast-1.aws.neon.tech/neondb?sslmode=require';
+    const NEON_URL = 'postgresql://neondb_owner:npg_i6O1uYUDmyZS@ep-wispy-fire-ao8jbmss-pooler.c-2.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require';
     if (!process.env.DATABASE_URL || process.env.DATABASE_URL.startsWith('file:')) {
       process.env.DATABASE_URL = NEON_URL;
       console.log('[instrumentation] Fixed DATABASE_URL → Neon PostgreSQL');
