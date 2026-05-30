@@ -62,18 +62,6 @@ Di sini kamu bisa:
 Tidak ada batasan usia atau lokasi — selama kamu bisa mengikuti pertandingan secara online, kamu bisa ikut!`,
   },
   {
-    id: 'umum-3',
-    category: 'umum',
-    question: 'Apa perbedaan divisi Cowo dan Cewe?',
-    answer: `Tarkam IDM membagi turnamen menjadi dua divisi:
-<ul class="list-disc pl-5 mt-2 space-y-1">
-<li><strong>♂ Divisi Cowo</strong> — Turnamen khusus pemain laki-laki</li>
-<li><strong>♀ Divisi Cewe</strong> — Turnamen khusus pemain perempuan</li>
-</ul>
-
-Setiap divisi memiliki bracket, peringkat, dan hadiah masing-masing. Pemain hanya bisa mendaftar di divisi yang sesuai dengan gender mereka. Sistem poin dan tier juga terpisah per divisi.`,
-  },
-  {
     id: 'umum-4',
     category: 'umum',
     question: 'Bagaimana cara mendaftar?',
@@ -131,23 +119,6 @@ Untuk jadwal terbaru, cek halaman <strong>Kalender Turnamen</strong> di navigasi
 </ul>
 
 Format detail bisa berubah per turnamen — selalu cek info di halaman bracket.`,
-  },
-  {
-    id: 'turnamen-3',
-    category: 'turnamen',
-    question: 'Apa itu bracket elimination?',
-    answer: `<strong>Bracket elimination</strong> adalah sistem pertandingan di mana pemain/tim yang kalah langsung tersingkir dari turnamen.
-
-Contoh alurnya:
-<ol class="list-decimal pl-5 mt-2 space-y-1">
-<li><strong>Round of 16</strong> — 16 pemain bertanding, 8 pemenang maju</li>
-<li><strong>Quarter Final</strong> — 8 pemain bertanding, 4 pemenang maju</li>
-<li><strong>Semi Final</strong> — 4 pemain bertanding, 2 pemenang maju</li>
-<li><strong>Grand Final</strong> — 2 pemain terakhir memperebutkan juara 1</li>
-<li><strong>3rd Place</strong> — 2 yang kalah di semi final memperebutkan juara 3</li>
-</ol>
-
-Kamu bisa melihat bracket lengkap di halaman <strong>Bracket</strong>.`,
   },
   {
     id: 'turnamen-4',
