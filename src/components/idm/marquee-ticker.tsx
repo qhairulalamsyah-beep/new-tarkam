@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useMemo, useEffect, useRef, useCallback } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import React, { useMemo, useEffect, useRef } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useTheme } from 'next-themes';
-import { hexToRgba, formatCurrency } from '@/lib/utils';
+import { hexToRgba } from '@/lib/utils';
 import type { StatsData } from '@/types/stats';
 import { getActivityFeed } from '@/lib/queries';
 import { smartRefetchInterval } from '@/lib/smart-polling';
@@ -173,7 +173,6 @@ interface UnifiedMarqueeProps {
 
 /* ========== Unified Marquee — CSS animation (compositor thread) ========== */
 export function MarqueeTicker({ maleData, femaleData }: UnifiedMarqueeProps = {}) {
-  const qc = useQueryClient();
   const trackRef = useRef<HTMLDivElement>(null);
   const [isMobile, setIsMobile] = React.useState(() => {
     if (typeof window !== 'undefined') return window.innerWidth < MOBILE_BREAKPOINT;
@@ -215,21 +214,9 @@ export function MarqueeTicker({ maleData, femaleData }: UnifiedMarqueeProps = {}
   const combinedItems = useMemo(() => {
     const stats: FeedItem[] = [];
 
-    const totalPlayers = (maleData?.totalPlayers || 0) + (femaleData?.totalPlayers || 0);
-    const totalPrizePool = (maleData?.activeTournamentPrizePool ?? maleData?.totalPrizePool ?? 0) + (femaleData?.activeTournamentPrizePool ?? femaleData?.totalPrizePool ?? 0);
     const totalMatches = (maleData?.recentMatches?.length || 0) + (femaleData?.recentMatches?.length || 0);
-    const totalClubs = (maleData?.clubs?.length || 0) + (femaleData?.clubs?.length || 0);
     const completedMatches = 0;
     const seasonInfo = 'Season Berjalan';
-
-    stats.push(
-      { id: 'stat-players', type: 'stat', icon: '👥', title: `${totalPlayers}`, subtitle: 'Total Pemain', timestamp: new Date().toISOString(), accent: '#57B5FF', numericValue: totalPlayers },
-      { id: 'stat-clubs', type: 'stat', icon: '🏛️', title: `${totalClubs}`, subtitle: 'Total Klub', timestamp: new Date().toISOString(), accent: '#EFF923', numericValue: totalClubs },
-    );
-
-    if (totalPrizePool > 0) {
-      stats.push({ id: 'stat-prize', type: 'stat', icon: '💰', title: formatCurrency(totalPrizePool), subtitle: 'Hadiah', timestamp: new Date().toISOString(), accent: '#22c55e', numericValue: totalPrizePool });
-    }
 
     if (totalMatches > 0) {
       stats.push({ id: 'stat-matches', type: 'stat', icon: '⚔️', title: `${totalMatches}`, subtitle: 'Pertandingan', timestamp: new Date().toISOString(), accent: '#FF2D78', numericValue: totalMatches });
