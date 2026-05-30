@@ -6,7 +6,7 @@
 // Turbopack hoists ESM imports, so we must set env BEFORE any import.
 // Using process.env assignment at module top-level ensures it runs first.
 
-const NEON_URL = 'postgresql://neondb_owner:npg_i6O1uYUDmyZS@ep-wispy-fire-ao8jbmss-pooler.c-2.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require';
+const NEON_URL = 'postgresql://neondb_owner:npg_i6O1uYUDmyZS@ep-dry-waterfall-aofsy5ty-pooler.c-2.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require';
 if (!process.env.DATABASE_URL || process.env.DATABASE_URL.startsWith('file:')) {
   process.env.DATABASE_URL = NEON_URL;
   console.log('[DB] Fixed DATABASE_URL → Neon PostgreSQL');
