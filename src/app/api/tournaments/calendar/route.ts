@@ -197,16 +197,153 @@ export async function GET(request: Request) {
   // ── Current season info ──
   const currentSeason = activeSeasons[0] || null;
 
+  // ── Fetch CalendarEvents (admin-scheduled) ──
+  // These are manually scheduled by admin ahead of time
+  const calendarEventWhere: Record<string, unknown> = {};
+  if (division) calendarEventWhere.division = division;
+  if (seasonId) calendarEventWhere.seasonId = seasonId;
+
+  const calendarEvents = await db.calendarEvent.findMany({
+    where: calendarEventWhere,
+    orderBy: [{ date: 'asc' }, { division: 'asc' }],
+    include: {
+      season: {
+        select: {
+          id: true,
+          name: true,
+          number: true,
+          division: true,
+          status: true,
+        },
+      },
+      tournament: {
+        select: {
+          id: true,
+          name: true,
+          status: true,
+          scheduledAt: true,
+          format: true,
+          defaultMatchFormat: true,
+          prizePool: true,
+          weekNumber: true,
+          division: true,
+          _count: { select: { participations: true, teams: true } },
+        },
+      },
+    },
+  });
+
+  // Format calendar events to match the tournament calendar item shape
+  const formattedCalendarEvents = calendarEvents.map(ce => {
+    const divisionLabel = ce.division === 'male' ? 'Cowo' : 'Cewe';
+    const hasLinkedTournament = !!ce.tournament;
+
+    // Determine registration status based on linked tournament
+    let registrationStatus: 'open' | 'closed' | 'upcoming' | 'live' = 'upcoming';
+    if (hasLinkedTournament && ce.tournament) {
+      if (ce.tournament.status === 'registration') {
+        registrationStatus = 'open';
+      } else if (ce.tournament.status === 'main_event' || ce.tournament.status === 'finalization') {
+        registrationStatus = 'live';
+      } else if (['approval', 'team_generation', 'bracket_generation'].includes(ce.tournament.status)) {
+        registrationStatus = 'closed';
+      } else if (ce.tournament.status === 'setup') {
+        registrationStatus = 'upcoming';
+      } else if (ce.tournament.status === 'completed') {
+        registrationStatus = 'closed';
+      }
+    }
+
+    return {
+      id: hasLinkedTournament ? ce.tournament!.id : ce.id,
+      calendarEventId: ce.id,
+      name: ce.title || `Tarkam ${divisionLabel} W${ce.weekNumber}`,
+      weekNumber: ce.weekNumber,
+      division: ce.division,
+      status: hasLinkedTournament ? ce.tournament!.status : 'scheduled',
+      registrationStatus,
+      format: hasLinkedTournament ? ce.tournament!.format : 'single_elimination',
+      defaultMatchFormat: hasLinkedTournament ? ce.tournament!.defaultMatchFormat : 'BO1',
+      prizePool: hasLinkedTournament ? ce.tournament!.prizePool : 0,
+      scheduledAt: hasLinkedTournament && ce.tournament!.scheduledAt ? ce.tournament!.scheduledAt.toISOString() : ce.date.toISOString(),
+      startAt: ce.date.toISOString(),
+      endAt: null,
+      registrationDeadline: null,
+      participantCount: hasLinkedTournament ? ce.tournament!._count.participations : 0,
+      teamCount: hasLinkedTournament ? ce.tournament!._count.teams : 0,
+      isCalendarEvent: !hasLinkedTournament,
+      notes: ce.notes,
+      season: {
+        id: ce.season.id,
+        name: ce.season.name,
+        number: ce.season.number,
+        division: ce.season.division,
+        status: ce.season.status,
+      },
+    };
+  });
+
+  // ── Merge tournaments and calendar events ──
+  // Calendar events that already have a linked tournament should replace the tournament entry
+  const linkedTournamentIds = new Set(calendarEvents.filter(ce => ce.tournamentId).map(ce => ce.tournamentId));
+  
+  // Filter out tournaments that are already represented by calendar events (use calendar event date instead)
+  const mergedTournaments = allTournaments.map(t => {
+    // If this tournament has a linked calendar event, update its startAt to use the calendar event date
+    const linkedEvent = calendarEvents.find(ce => ce.tournamentId === t.id);
+    if (linkedEvent) {
+      return {
+        ...t,
+        startAt: linkedEvent.date.toISOString(),
+        scheduledAt: linkedEvent.date.toISOString(),
+        calendarEventId: linkedEvent.id,
+      };
+    }
+    return t;
+  });
+
+  // Add standalone calendar events (no linked tournament) that aren't already in the tournament list
+  const standaloneEvents = formattedCalendarEvents.filter(ce => ce.isCalendarEvent);
+
+  // Combine all
+  const allItems = [...mergedTournaments, ...standaloneEvents];
+
+  // Re-group by month
+  const mergedByMonth: Record<string, typeof allItems> = {};
+  for (const item of allItems) {
+    const dateStr = item.startAt || item.scheduledAt;
+    if (dateStr) {
+      const d = new Date(dateStr);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      if (!mergedByMonth[key]) mergedByMonth[key] = [];
+      mergedByMonth[key].push(item);
+    } else {
+      if (!mergedByMonth['unscheduled']) mergedByMonth['unscheduled'] = [];
+      mergedByMonth['unscheduled'].push(item);
+    }
+  }
+
+  // Re-compute upcoming
+  const mergedUpcoming = allItems
+    .filter(t => t.status !== 'completed')
+    .sort((a, b) => {
+      const aDate = a.startAt || a.scheduledAt || '';
+      const bDate = b.startAt || b.scheduledAt || '';
+      return aDate.localeCompare(bDate);
+    });
+
   return NextResponse.json({
     currentSeason,
     seasons: activeSeasons,
-    tournaments: allTournaments,
-    upcoming,
-    byMonth,
+    tournaments: allItems,
+    upcoming: mergedUpcoming,
+    byMonth: mergedByMonth,
+    calendarEvents: formattedCalendarEvents,
     meta: {
-      totalTournaments: allTournaments.length,
-      upcomingCount: upcoming.length,
+      totalTournaments: allItems.length,
+      upcomingCount: mergedUpcoming.length,
       month: month || null,
+      calendarEventCount: calendarEvents.length,
     },
   }, { headers });
 }

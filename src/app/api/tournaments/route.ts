@@ -170,6 +170,43 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Gagal membuat turnamen. Coba lagi.' }, { status: 500 });
   }
 
+  // ── Sync: Link matching CalendarEvent to this tournament ──
+  // When admin creates a tournament, find any CalendarEvent with same division+weekNumber+seasonId
+  // and link it. If the tournament has a different date than the calendar event, update the tournament date.
+  try {
+    const matchingEvent = await db.calendarEvent.findFirst({
+      where: {
+        division: tournament.division,
+        weekNumber: tournament.weekNumber,
+        seasonId: tournament.seasonId,
+        tournamentId: null, // Not yet linked
+      },
+    });
+
+    if (matchingEvent) {
+      // Link the calendar event to this tournament
+      await db.calendarEvent.update({
+        where: { id: matchingEvent.id },
+        data: {
+          tournamentId: tournament.id,
+          // If tournament doesn't have scheduledAt, use the calendar event date
+          ...(tournament.scheduledAt ? {} : { date: tournament.scheduledAt || matchingEvent.date }),
+        },
+      });
+
+      // If tournament doesn't have a scheduledAt, use the calendar event's date
+      if (!tournament.scheduledAt) {
+        await db.tournament.update({
+          where: { id: tournament.id },
+          data: { scheduledAt: matchingEvent.date },
+        });
+      }
+    }
+  } catch (syncError) {
+    // Non-critical: don't fail the tournament creation if sync fails
+    console.error('[Tournament Calendar Sync Error]', syncError);
+  }
+
   // Pusher: Notify real-time clients about tournament creation
   void pusherTrigger(PUSHER_CHANNELS.TOURNAMENT, PUSHER_EVENTS.TOURNAMENT_STATUS_CHANGED, {
     tournamentId: tournament.id, division: tournament.division, weekNumber: tournament.weekNumber, status: tournament.status,

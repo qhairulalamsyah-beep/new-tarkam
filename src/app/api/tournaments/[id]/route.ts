@@ -1482,6 +1482,47 @@ export async function PUT(
     details: `Update tournament`,
   });
 
+  // ── Sync: Update linked CalendarEvent date when tournament scheduledAt changes ──
+  if (body.scheduledAt !== undefined) {
+    try {
+      const linkedEvent = await db.calendarEvent.findFirst({
+        where: { tournamentId: id },
+      });
+      if (linkedEvent) {
+        const newDate = body.scheduledAt ? wibToUTC(body.scheduledAt) : null;
+        if (newDate) {
+          await db.calendarEvent.update({
+            where: { id: linkedEvent.id },
+            data: { date: newDate },
+          });
+        }
+      } else {
+        // No linked event yet — try to find a matching unlinked calendar event
+        // (same division, weekNumber, seasonId) and link it
+        const matchingEvent = await db.calendarEvent.findFirst({
+          where: {
+            tournamentId: null,
+            division: tournament.division,
+            weekNumber: tournament.weekNumber,
+            seasonId: tournament.seasonId,
+          },
+        });
+        if (matchingEvent) {
+          await db.calendarEvent.update({
+            where: { id: matchingEvent.id },
+            data: {
+              tournamentId: id,
+              date: body.scheduledAt ? wibToUTC(body.scheduledAt) : matchingEvent.date,
+            },
+          });
+        }
+      }
+    } catch (syncError) {
+      // Non-critical: don't fail the tournament update if sync fails
+      console.error('[Tournament Update Calendar Sync Error]', syncError);
+    }
+  }
+
   // Purge CDN cache so dashboard reflects new status immediately
   revalidateTag('league-data', 'max');
   try {

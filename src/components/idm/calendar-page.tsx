@@ -1,21 +1,23 @@
 'use client';
 
 import React, { useState, useMemo, useCallback } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { Calendar, ChevronLeft, ChevronRight, Clock, Trophy, Users, Music, Shield, X } from 'lucide-react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { Calendar, ChevronLeft, ChevronRight, Clock, Trophy, Users, Music, Shield, X, Plus, Pencil, Trash2, Save, Lock } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { smartRefetchInterval } from '@/lib/smart-polling';
+import { useAppStore } from '@/lib/store';
 
 /* ═══════════════════════════════════════════
    Types
    ═══════════════════════════════════════════ */
 interface CalendarTournament {
   id: string;
+  calendarEventId?: string;
   name: string;
   weekNumber: number;
   division: string;
   status: string;
-  registrationStatus: 'open' | 'closed' | 'upcoming' | 'live';
+  registrationStatus: 'open' | 'closed' | 'upcoming' | 'live' | 'scheduled';
   format: string;
   defaultMatchFormat: string;
   prizePool: number;
@@ -25,6 +27,8 @@ interface CalendarTournament {
   registrationDeadline: string | null;
   participantCount: number;
   teamCount: number;
+  isCalendarEvent?: boolean;
+  notes?: string | null;
   season: {
     id: string;
     name: string;
@@ -119,6 +123,8 @@ function getRegistrationBadge(status: CalendarTournament['registrationStatus']) 
       return { label: 'Akan Datang', className: 'bg-idm-gold-warm/15 text-idm-gold-warm border-idm-gold-warm/25' };
     case 'live':
       return { label: 'LIVE', className: 'bg-green-500/20 text-green-400 border-green-500/30 animate-pulse' };
+    case 'scheduled':
+      return { label: 'Terjadwal', className: 'bg-blue-500/15 text-blue-400 border-blue-500/25' };
   }
 }
 
@@ -131,18 +137,20 @@ function MonthCalendarGrid({
   tournaments,
   selectedDay,
   onDayClick,
+  isAdminMode,
+  onEmptyDayClick,
 }: {
   year: number;
   month: number; // 0-indexed
   tournaments: CalendarTournament[];
   selectedDay: number | null;
   onDayClick: (day: number) => void;
+  isAdminMode?: boolean;
+  onEmptyDayClick?: (day: number) => void;
 }) {
-  // Get days in month and first day of week
   const daysInMonth = new Date(year, month + 1, 0).getDate();
-  const firstDayOfWeek = new Date(year, month, 1).getDay(); // 0=Sunday
+  const firstDayOfWeek = new Date(year, month, 1).getDay();
 
-  // Map tournaments to days
   const tournamentsByDay = useMemo(() => {
     const map: Record<number, CalendarTournament[]> = {};
     for (const t of tournaments) {
@@ -163,7 +171,6 @@ function MonthCalendarGrid({
   const isCurrentMonth = today.getFullYear() === year && today.getMonth() === month;
   const todayDate = today.getDate();
 
-  // Build calendar cells
   const cells: (number | null)[] = [];
   for (let i = 0; i < firstDayOfWeek; i++) cells.push(null);
   for (let d = 1; d <= daysInMonth; d++) cells.push(d);
@@ -171,7 +178,6 @@ function MonthCalendarGrid({
 
   return (
     <div>
-      {/* Day headers */}
       <div className="grid grid-cols-7 mb-1">
         {DAY_NAMES_ID.map(day => (
           <div key={day} className="text-center text-[10px] font-semibold text-muted-foreground/60 py-1">
@@ -180,7 +186,6 @@ function MonthCalendarGrid({
         ))}
       </div>
 
-      {/* Calendar grid */}
       <div className="grid grid-cols-7 gap-0.5">
         {cells.map((day, idx) => {
           if (day === null) {
@@ -194,16 +199,23 @@ function MonthCalendarGrid({
           const hasFemale = dayTournaments.some(t => t.division === 'female');
           const hasTournament = dayTournaments.length > 0;
 
-          // Get unique week numbers per division for label
           const maleWeeks = [...new Set(dayTournaments.filter(t => t.division === 'male').map(t => t.weekNumber))];
           const femaleWeeks = [...new Set(dayTournaments.filter(t => t.division === 'female').map(t => t.weekNumber))];
+
+          const handleClick = () => {
+            if (hasTournament) {
+              onDayClick(day);
+            } else if (isAdminMode && onEmptyDayClick) {
+              onEmptyDayClick(day);
+            }
+          };
 
           return (
             <button
               key={day}
-              onClick={() => hasTournament && onDayClick(day)}
+              onClick={handleClick}
               className={`h-14 sm:h-16 flex flex-col items-center justify-start pt-1.5 rounded-xl transition-all duration-200 relative ${
-                hasTournament
+                hasTournament || isAdminMode
                   ? 'cursor-pointer hover:bg-idm-gold-warm/10 active:scale-95'
                   : 'cursor-default'
               } ${
@@ -225,7 +237,6 @@ function MonthCalendarGrid({
               }`}>
                 {day}
               </span>
-              {/* Tournament labels with division color */}
               {hasTournament && (
                 <div className="flex flex-col items-center gap-0.5 mt-0.5 w-full px-0.5 overflow-hidden">
                   {hasMale && maleWeeks.length > 0 && (
@@ -240,8 +251,13 @@ function MonthCalendarGrid({
                   )}
                 </div>
               )}
-              {/* Today indicator */}
-              {isToday && !hasTournament && (
+              {/* Admin mode: + icon on empty days */}
+              {isAdminMode && !hasTournament && (
+                <div className="flex items-center justify-center mt-1">
+                  <Plus className="w-3 h-3 text-idm-gold-warm/40" />
+                </div>
+              )}
+              {isToday && !hasTournament && !isAdminMode && (
                 <div className="absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-idm-gold-warm" />
               )}
             </button>
@@ -255,7 +271,12 @@ function MonthCalendarGrid({
 /* ═══════════════════════════════════════════
    Tournament Card
    ═══════════════════════════════════════════ */
-function TournamentCard({ tournament }: { tournament: CalendarTournament }) {
+function TournamentCard({ tournament, isAdminMode, onDelete, onEdit }: {
+  tournament: CalendarTournament;
+  isAdminMode?: boolean;
+  onDelete?: (id: string) => void;
+  onEdit?: (t: CalendarTournament) => void;
+}) {
   const divColors = getDivisionColor(tournament.division);
   const regBadge = getRegistrationBadge(tournament.registrationStatus);
   const DivisionIcon = tournament.division === 'male' ? Music : Shield;
@@ -264,11 +285,13 @@ function TournamentCard({ tournament }: { tournament: CalendarTournament }) {
   const targetDate = tournament.startAt || tournament.scheduledAt;
   const isUpcoming = targetDate && new Date(targetDate).getTime() > Date.now();
   const isLive = tournament.registrationStatus === 'live';
+  const isScheduled = tournament.isCalendarEvent && tournament.status === 'scheduled';
 
   return (
-    <div className="rounded-[20px] border border-idm-gold-warm/10 bg-card/60 overflow-hidden transition-all duration-300 hover:border-idm-gold-warm/20">
+    <div className={`rounded-[20px] border bg-card/60 overflow-hidden transition-all duration-300 hover:border-idm-gold-warm/20 ${
+      isScheduled ? 'border-blue-500/20' : 'border-idm-gold-warm/10'
+    }`}>
       <div className="p-3 sm:p-4">
-        {/* Header row */}
         <div className="flex items-start justify-between gap-2 mb-2">
           <div className="flex items-center gap-2 min-w-0">
             <div className={`w-7 h-7 rounded-lg ${divColors.bg} border ${divColors.border} flex items-center justify-center shrink-0`}>
@@ -284,32 +307,46 @@ function TournamentCard({ tournament }: { tournament: CalendarTournament }) {
             </div>
           </div>
 
-          {/* Status badge */}
-          <Badge className={`${regBadge.className} text-[8px] sm:text-[9px] font-bold border shrink-0`}>
-            {isLive && <span className="w-1.5 h-1.5 rounded-full bg-green-400 mr-1 animate-pulse" />}
-            {regBadge.label}
-          </Badge>
+          <div className="flex items-center gap-1 shrink-0">
+            {isAdminMode && tournament.calendarEventId && (
+              <>
+                <button
+                  onClick={() => onEdit?.(tournament)}
+                  className="w-5 h-5 rounded-md flex items-center justify-center text-muted-foreground/50 hover:text-idm-gold-warm hover:bg-idm-gold-warm/10 transition-all cursor-pointer"
+                  aria-label="Edit"
+                >
+                  <Pencil className="w-3 h-3" />
+                </button>
+                <button
+                  onClick={() => onDelete?.(tournament.calendarEventId!)}
+                  className="w-5 h-5 rounded-md flex items-center justify-center text-muted-foreground/50 hover:text-red-400 hover:bg-red-400/10 transition-all cursor-pointer"
+                  aria-label="Hapus"
+                >
+                  <Trash2 className="w-3 h-3" />
+                </button>
+              </>
+            )}
+            <Badge className={`${regBadge.className} text-[8px] sm:text-[9px] font-bold border`}>
+              {isLive && <span className="w-1.5 h-1.5 rounded-full bg-green-400 mr-1 animate-pulse" />}
+              {regBadge.label}
+            </Badge>
+          </div>
         </div>
 
-        {/* Info row */}
         <div className="flex items-center gap-3 text-[10px] text-muted-foreground/70 mb-2">
-          {/* Division badge */}
           <span className={`inline-flex items-center gap-0.5 ${divColors.bg} ${divColors.text} ${divColors.border} border px-1.5 py-0.5 rounded-md text-[9px] font-bold`}>
             {divisionLabel}
           </span>
 
-          {/* Format */}
           {tournament.defaultMatchFormat && (
             <span className="text-[9px] font-semibold text-muted-foreground/60">{tournament.defaultMatchFormat}</span>
           )}
 
-          {/* Participants */}
           <span className="flex items-center gap-0.5 text-[9px]">
             <Users className="w-3 h-3" />
             {tournament.participantCount}
           </span>
 
-          {/* Prize */}
           {tournament.prizePool > 0 && (
             <span className="flex items-center gap-0.5 text-[9px] text-idm-gold-warm/70">
               <Trophy className="w-3 h-3" />
@@ -318,7 +355,6 @@ function TournamentCard({ tournament }: { tournament: CalendarTournament }) {
           )}
         </div>
 
-        {/* Countdown / Date */}
         {targetDate && (
           <div className="flex items-center gap-1.5 pt-2 border-t border-idm-gold-warm/5">
             <Clock className="w-3 h-3 text-muted-foreground/50" />
@@ -341,6 +377,152 @@ function TournamentCard({ tournament }: { tournament: CalendarTournament }) {
             )}
           </div>
         )}
+
+        {tournament.notes && (
+          <div className="mt-2 text-[10px] text-muted-foreground/60 bg-muted/20 rounded px-2 py-1">
+            {tournament.notes}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════
+   Add/Edit Event Modal
+   ═══════════════════════════════════════════ */
+function EventFormModal({
+  mode,
+  initialData,
+  seasonId,
+  onSave,
+  onClose,
+  isSaving,
+}: {
+  mode: 'add' | 'edit';
+  initialData?: { date: string; division: string; weekNumber: number; title?: string; notes?: string; calendarEventId?: string };
+  seasonId: string;
+  onSave: (data: { date: string; division: string; weekNumber: number; title: string; notes: string; calendarEventId?: string }) => void;
+  onClose: () => void;
+  isSaving: boolean;
+}) {
+  const [division, setDivision] = useState(initialData?.division || 'male');
+  const [weekNumber, setWeekNumber] = useState(initialData?.weekNumber || 1);
+  const [title, setTitle] = useState(initialData?.title || '');
+  const [notes, setNotes] = useState(initialData?.notes || '');
+  const [date, setDate] = useState(initialData?.date || '');
+
+  const divisionLabel = division === 'male' ? 'Cowo' : 'Cewe';
+  const autoTitle = title || `Tarkam ${divisionLabel} W${weekNumber}`;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={onClose}>
+      <div className="w-full max-w-sm rounded-2xl border border-idm-gold-warm/15 bg-card p-5 shadow-xl" onClick={e => e.stopPropagation()}>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-sm font-bold text-foreground flex items-center gap-1.5">
+            {mode === 'add' ? <Plus className="w-4 h-4 text-idm-gold-warm" /> : <Pencil className="w-4 h-4 text-idm-gold-warm" />}
+            {mode === 'add' ? 'Tambah Jadwal' : 'Edit Jadwal'}
+          </h3>
+          <button onClick={onClose} className="w-6 h-6 rounded-md flex items-center justify-center text-muted-foreground/50 hover:text-foreground hover:bg-muted/40 transition-all cursor-pointer">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        <div className="space-y-3">
+          {/* Date */}
+          <div>
+            <label className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider mb-1 block">Tanggal</label>
+            <input
+              type="date"
+              value={date}
+              onChange={e => setDate(e.target.value)}
+              className="w-full rounded-lg border border-idm-gold-warm/15 bg-background px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-idm-gold-warm/30"
+            />
+          </div>
+
+          {/* Division */}
+          <div>
+            <label className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider mb-1 block">Divisi</label>
+            <div className="flex gap-2">
+              {(['male', 'female'] as const).map(div => (
+                <button
+                  key={div}
+                  onClick={() => setDivision(div)}
+                  className={`flex-1 px-3 py-2 rounded-lg text-[10px] font-bold border transition-all cursor-pointer ${
+                    division === div
+                      ? div === 'male'
+                        ? 'bg-idm-male/15 text-idm-male-light border-idm-male/30'
+                        : 'bg-idm-female/15 text-idm-female-light border-idm-female/30'
+                      : 'border-idm-gold-warm/10 text-muted-foreground/60 hover:bg-muted/30'
+                  }`}
+                >
+                  {div === 'male' ? 'Cowo' : 'Cewe'}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Week Number */}
+          <div>
+            <label className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider mb-1 block">Week Ke-</label>
+            <input
+              type="number"
+              min={1}
+              max={20}
+              value={weekNumber}
+              onChange={e => setWeekNumber(Number(e.target.value))}
+              className="w-full rounded-lg border border-idm-gold-warm/15 bg-background px-3 py-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-idm-gold-warm/30"
+            />
+          </div>
+
+          {/* Title (auto-generated preview) */}
+          <div>
+            <label className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider mb-1 block">Judul (opsional)</label>
+            <input
+              type="text"
+              value={title}
+              onChange={e => setTitle(e.target.value)}
+              placeholder={autoTitle}
+              className="w-full rounded-lg border border-idm-gold-warm/15 bg-background px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-idm-gold-warm/30"
+            />
+          </div>
+
+          {/* Notes */}
+          <div>
+            <label className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider mb-1 block">Catatan (opsional)</label>
+            <textarea
+              value={notes}
+              onChange={e => setNotes(e.target.value)}
+              placeholder="Info tambahan untuk pemain..."
+              rows={2}
+              className="w-full rounded-lg border border-idm-gold-warm/15 bg-background px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-idm-gold-warm/30 resize-none"
+            />
+          </div>
+        </div>
+
+        {/* Preview */}
+        <div className="mt-3 p-2 rounded-lg bg-idm-gold-warm/5 border border-idm-gold-warm/10">
+          <span className="text-[9px] text-muted-foreground/60">Preview: </span>
+          <span className="text-[10px] font-bold text-foreground">{title || autoTitle}</span>
+        </div>
+
+        {/* Actions */}
+        <div className="flex gap-2 mt-4">
+          <button
+            onClick={onClose}
+            className="flex-1 px-3 py-2 rounded-lg border border-idm-gold-warm/10 text-[10px] font-bold text-muted-foreground/70 hover:bg-muted/30 transition-all cursor-pointer"
+          >
+            Batal
+          </button>
+          <button
+            onClick={() => onSave({ date, division, weekNumber, title, notes, calendarEventId: initialData?.calendarEventId })}
+            disabled={isSaving || !date}
+            className="flex-1 px-3 py-2 rounded-lg bg-idm-gold-warm/15 text-idm-gold-warm border border-idm-gold-warm/25 text-[10px] font-bold hover:bg-idm-gold-warm/25 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1"
+          >
+            <Save className="w-3 h-3" />
+            {isSaving ? 'Menyimpan...' : 'Simpan'}
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -356,6 +538,9 @@ function SelectedDayDetail({
   tournaments,
   divisionFilter,
   onClose,
+  isAdminMode,
+  onDeleteEvent,
+  onEditEvent,
 }: {
   year: number;
   month: number;
@@ -363,6 +548,9 @@ function SelectedDayDetail({
   tournaments: CalendarTournament[];
   divisionFilter: DivisionFilter;
   onClose?: () => void;
+  isAdminMode?: boolean;
+  onDeleteEvent?: (id: string) => void;
+  onEditEvent?: (t: CalendarTournament) => void;
 }) {
   const dayTournaments = tournaments.filter(t => {
     const dateStr = t.startAt || t.scheduledAt;
@@ -402,7 +590,13 @@ function SelectedDayDetail({
       </div>
       <div className="p-3 space-y-2 max-h-[400px] overflow-y-auto custom-scrollbar">
         {dayTournaments.map(t => (
-          <TournamentCard key={t.id} tournament={t} />
+          <TournamentCard
+            key={t.id}
+            tournament={t}
+            isAdminMode={isAdminMode}
+            onDelete={onDeleteEvent}
+            onEdit={onEditEvent}
+          />
         ))}
       </div>
     </div>
@@ -413,9 +607,17 @@ function SelectedDayDetail({
    Calendar Page — Main Component
    ═══════════════════════════════════════════ */
 export function CalendarPage() {
+  const adminAuth = useAppStore(s => s.adminAuth);
+  const isAdmin = adminAuth.isAuthenticated;
+  const [isAdminMode, setIsAdminMode] = useState(false);
   const [divisionFilter, setDivisionFilter] = useState<DivisionFilter>('all');
   const [currentDate, setCurrentDate] = useState(() => new Date());
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
+  const [showEventForm, setShowEventForm] = useState(false);
+  const [eventFormMode, setEventFormMode] = useState<'add' | 'edit'>('add');
+  const [eventFormData, setEventFormData] = useState<{ date: string; division: string; weekNumber: number; title?: string; notes?: string; calendarEventId?: string }>();
+  const [isSaving, setIsSaving] = useState(false);
+  const queryClient = useQueryClient();
 
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
@@ -471,6 +673,112 @@ export function CalendarPage() {
     setSelectedDay(prev => prev === day ? null : day);
   }, []);
 
+  // Admin: click empty day to add event
+  const handleEmptyDayClick = useCallback((day: number) => {
+    if (!isAdminMode) return;
+    const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    setEventFormMode('add');
+    setEventFormData({ date: dateStr, division: divisionFilter === 'all' ? 'male' : divisionFilter, weekNumber: 1 });
+    setShowEventForm(true);
+  }, [isAdminMode, year, month, divisionFilter]);
+
+  // Admin: save event (add or edit)
+  const handleSaveEvent = useCallback(async (formData: { date: string; division: string; weekNumber: number; title: string; notes: string; calendarEventId?: string }) => {
+    setIsSaving(true);
+    try {
+      const seasonId = data?.currentSeason?.id;
+      if (!seasonId) {
+        alert('Tidak ada season aktif. Buat season terlebih dahulu.');
+        return;
+      }
+
+      const divisionLabel = formData.division === 'male' ? 'Cowo' : 'Cewe';
+      const title = formData.title || `Tarkam ${divisionLabel} W${formData.weekNumber}`;
+
+      if (eventFormMode === 'add') {
+        const res = await fetch('/api/calendar-events', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            date: formData.date,
+            division: formData.division,
+            weekNumber: formData.weekNumber,
+            seasonId,
+            title,
+            notes: formData.notes || null,
+            createdBy: adminAuth.admin?.username || 'admin',
+          }),
+        });
+        if (!res.ok) {
+          const err = await res.json();
+          alert(err.error || 'Gagal menambah jadwal');
+          return;
+        }
+      } else if (eventFormMode === 'edit' && formData.calendarEventId) {
+        const res = await fetch('/api/calendar-events', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id: formData.calendarEventId,
+            date: formData.date,
+            division: formData.division,
+            weekNumber: formData.weekNumber,
+            title,
+            notes: formData.notes || null,
+          }),
+        });
+        if (!res.ok) {
+          const err = await res.json();
+          alert(err.error || 'Gagal mengupdate jadwal');
+          return;
+        }
+      }
+
+      setShowEventForm(false);
+      setEventFormData(undefined);
+      // Refresh calendar data
+      queryClient.invalidateQueries({ queryKey: ['tournaments-calendar'] });
+    } catch (error) {
+      console.error('Save event error:', error);
+      alert('Gagal menyimpan jadwal');
+    } finally {
+      setIsSaving(false);
+    }
+  }, [data, eventFormMode, adminAuth, queryClient]);
+
+  // Admin: delete event
+  const handleDeleteEvent = useCallback(async (calendarEventId: string) => {
+    if (!confirm('Hapus jadwal ini dari kalender?')) return;
+    try {
+      const res = await fetch(`/api/calendar-events?id=${calendarEventId}`, { method: 'DELETE' });
+      if (!res.ok) {
+        alert('Gagal menghapus jadwal');
+        return;
+      }
+      queryClient.invalidateQueries({ queryKey: ['tournaments-calendar'] });
+    } catch (error) {
+      console.error('Delete event error:', error);
+      alert('Gagal menghapus jadwal');
+    }
+  }, [queryClient]);
+
+  // Admin: edit event
+  const handleEditEvent = useCallback((tournament: CalendarTournament) => {
+    if (!tournament.calendarEventId) return;
+    const dateStr = tournament.startAt || tournament.scheduledAt || '';
+    const dateOnly = dateStr ? dateStr.split('T')[0] : '';
+    setEventFormMode('edit');
+    setEventFormData({
+      date: dateOnly,
+      division: tournament.division,
+      weekNumber: tournament.weekNumber,
+      title: tournament.name,
+      notes: tournament.notes || '',
+      calendarEventId: tournament.calendarEventId,
+    });
+    setShowEventForm(true);
+  }, []);
+
   // Season info
   const currentSeason = data?.currentSeason;
   const seasonLabel = currentSeason
@@ -488,14 +796,40 @@ export function CalendarPage() {
             </h1>
             <p className="text-xs text-muted-foreground mt-0.5">Jadwal pertandingan dan pendaftaran</p>
           </div>
-          {currentSeason && (
-            <Badge className="bg-idm-gold-warm/15 text-idm-gold-warm border border-idm-gold-warm/25 text-[10px] font-bold shrink-0">
-              <Calendar className="w-3 h-3 mr-1" />
-              {seasonLabel}
-            </Badge>
-          )}
+          <div className="flex items-center gap-2">
+            {isAdmin && (
+              <button
+                onClick={() => { setIsAdminMode(prev => !prev); setSelectedDay(null); }}
+                className={`compact-pill flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold border transition-all cursor-pointer ${
+                  isAdminMode
+                    ? 'bg-idm-gold-warm/15 text-idm-gold-warm border-idm-gold-warm/25 shadow-sm shadow-idm-gold-warm/10'
+                    : 'border-idm-gold-warm/10 text-muted-foreground/60 hover:text-foreground hover:bg-muted/30'
+                }`}
+              >
+                <Lock className="w-3 h-3" />
+                {isAdminMode ? 'Mode Admin' : 'Edit'}
+              </button>
+            )}
+            {currentSeason && (
+              <Badge className="bg-idm-gold-warm/15 text-idm-gold-warm border border-idm-gold-warm/25 text-[10px] font-bold shrink-0">
+                <Calendar className="w-3 h-3 mr-1" />
+                {seasonLabel}
+              </Badge>
+            )}
+          </div>
         </div>
       </div>
+
+      {/* Admin mode banner */}
+      {isAdminMode && (
+        <div className="max-w-7xl mx-auto px-4 pt-3">
+          <div className="px-3 py-2 rounded-lg bg-idm-gold-warm/5 border border-idm-gold-warm/15 flex items-center gap-2">
+            <Lock className="w-3.5 h-3.5 text-idm-gold-warm" />
+            <span className="text-[10px] font-bold text-idm-gold-warm">Mode Admin Aktif</span>
+            <span className="text-[10px] text-muted-foreground/60">— Klik tanggal kosong untuk menambah jadwal, klik edit/hapus pada jadwal yang sudah ada</span>
+          </div>
+        </div>
+      )}
 
       {/* ═══ Division Filter Pills ═══ */}
       <div className="max-w-7xl mx-auto px-4 pt-4 pb-2">
@@ -524,7 +858,6 @@ export function CalendarPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           {/* ═══ Calendar Grid — Left Column ═══ */}
           <div className="lg:col-span-2 space-y-4">
-            {/* Month Navigation */}
             <div className="rounded-[20px] border border-idm-gold-warm/10 bg-card/60 overflow-hidden">
               <div className="flex items-center justify-between px-4 py-3 border-b border-idm-gold-warm/10">
                 <button
@@ -556,7 +889,6 @@ export function CalendarPage() {
                 </button>
               </div>
 
-              {/* Calendar */}
               <div className="p-3 sm:p-4">
                 {isLoading ? (
                   <div className="space-y-2 animate-pulse">
@@ -573,6 +905,8 @@ export function CalendarPage() {
                     tournaments={filteredTournaments}
                     selectedDay={selectedDay}
                     onDayClick={handleDayClick}
+                    isAdminMode={isAdminMode}
+                    onEmptyDayClick={handleEmptyDayClick}
                   />
                 )}
               </div>
@@ -606,6 +940,9 @@ export function CalendarPage() {
                 tournaments={data?.tournaments || []}
                 divisionFilter={divisionFilter}
                 onClose={() => setSelectedDay(null)}
+                isAdminMode={isAdminMode}
+                onDeleteEvent={handleDeleteEvent}
+                onEditEvent={handleEditEvent}
               />
             )}
 
@@ -644,7 +981,13 @@ export function CalendarPage() {
             ) : (
               <div className="space-y-2 max-h-[600px] overflow-y-auto custom-scrollbar pr-1">
                 {filteredUpcoming.slice(0, 10).map(tournament => (
-                  <TournamentCard key={tournament.id} tournament={tournament} />
+                  <TournamentCard
+                    key={tournament.id}
+                    tournament={tournament}
+                    isAdminMode={isAdminMode}
+                    onDelete={handleDeleteEvent}
+                    onEdit={handleEditEvent}
+                  />
                 ))}
               </div>
             )}
@@ -689,6 +1032,18 @@ export function CalendarPage() {
           </div>
         </div>
       </div>
+
+      {/* Event Form Modal */}
+      {showEventForm && (
+        <EventFormModal
+          mode={eventFormMode}
+          initialData={eventFormData}
+          seasonId={data?.currentSeason?.id || ''}
+          onSave={handleSaveEvent}
+          onClose={() => { setShowEventForm(false); setEventFormData(undefined); }}
+          isSaving={isSaving}
+        />
+      )}
     </div>
   );
 }

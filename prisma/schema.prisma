@@ -82,6 +82,7 @@ model Season {
   leagueMatches  LeagueMatch[]
   playoffMatches PlayoffMatch[]
   pointRecords   PlayerPoint[]
+  calendarEvents CalendarEvent[]
   championClub   ClubProfile? @relation("SeasonChampion", fields: [championClubId], references: [id], onDelete: SetNull)
   championPlayer Player?     @relation("SeasonPlayerChampion", fields: [championPlayerId], references: [id], onDelete: SetNull)
   sultanPlayer   Player?     @relation("SeasonSultan", fields: [sultanPlayerId], references: [id], onDelete: SetNull)
@@ -148,6 +149,7 @@ model Tournament {
   sponsoredPrizes     SponsoredPrize[]
   waRegistrations     WaRegistration[]
   liveStreams         LiveStream[]
+  calendarEvent       CalendarEvent?
 
   @@unique([weekNumber, division, seasonId])
   @@index([division, seasonId])
@@ -1003,6 +1005,33 @@ model WaNotifLog {
 // ============================================
 // IDM LEAGUE - REFERRAL SYSTEM
 // ============================================
+
+// ============================================
+// IDM LEAGUE - CALENDAR SCHEDULE SYSTEM
+// ============================================
+
+model CalendarEvent {
+  id           String    @id @default(cuid())
+  date         DateTime  // The scheduled date for this event
+  division     String    // "male" | "female"
+  weekNumber   Int       // Week number in the season
+  seasonId     String    // Which season this belongs to
+  tournamentId String?   @unique  // Linked tournament (nullable - set when tournament is created)
+  title        String?   // Optional custom title (e.g. "Tarkam Cowo W3")
+  notes        String?   // Optional admin notes
+  createdBy    String?   // Admin who created this event
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  season     Season     @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  tournament Tournament? @relation(fields: [tournamentId], references: [id], onDelete: SetNull)
+
+  @@unique([date, division, weekNumber, seasonId])
+  @@index([date])
+  @@index([division])
+  @@index([seasonId])
+  @@index([tournamentId])
+}
 
 model ReferralCode {
   id          String   @id @default(cuid())
