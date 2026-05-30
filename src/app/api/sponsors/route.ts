@@ -124,15 +124,28 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Sponsor ID is required' }, { status: 400 });
     }
 
-    // Delete related records first
-    await db.sponsorBanner.deleteMany({ where: { sponsorId: id } });
-    await db.sponsoredPrize.deleteMany({ where: { sponsorId: id } });
-    await db.tournamentSponsor.deleteMany({ where: { sponsorId: id } });
-
-    // Then delete the sponsor
-    await db.sponsor.delete({ where: { id } });
-
-    return NextResponse.json({ success: true });
+    // Delete sponsor — related records (SponsorBanner, SponsoredPrize, TournamentSponsor)
+    // are auto-deleted via onDelete: Cascade in Prisma schema.
+    // Use retry to handle Neon PostgreSQL connection drops.
+    let lastError: unknown;
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      try {
+        await db.sponsor.delete({ where: { id } });
+        return NextResponse.json({ success: true });
+      } catch (err: unknown) {
+        lastError = err;
+        const errMsg = err instanceof Error ? err.message : String(err);
+        // Retry on connection errors
+        if (errMsg.includes('Closed') || errMsg.includes('Timed out') || errMsg.includes('ECONNRESET') || errMsg.includes('Connection')) {
+          console.warn(`[sponsors DELETE] Retry ${attempt}/3 — connection error: ${errMsg}`);
+          if (attempt < 3) await new Promise(r => setTimeout(r, 1000 * attempt));
+          continue;
+        }
+        // Not a connection error — throw immediately
+        throw err;
+      }
+    }
+    throw lastError;
   } catch (error) {
     console.error('Error deleting sponsor:', error);
     return NextResponse.json({ error: 'Failed to delete sponsor' }, { status: 500 });

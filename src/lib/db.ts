@@ -26,9 +26,17 @@ function createPrismaClient(): PrismaClient {
   if (process.env.NODE_ENV === 'development') {
     console.log('[DB] Using PostgreSQL (Neon)')
   }
+
+  // Add connection_limit & pool_timeout to DATABASE_URL for Neon serverless
+  let dbUrl = process.env.DATABASE_URL!;
+  if (!dbUrl.includes('connection_limit')) {
+    const separator = dbUrl.includes('?') ? '&' : '?';
+    dbUrl += `${separator}connection_limit=5&pool_timeout=10`;
+  }
+
   return new PrismaClient({
     log: logLevel,
-    datasources: { db: { url: process.env.DATABASE_URL } },
+    datasources: { db: { url: dbUrl } },
   })
 }
 
