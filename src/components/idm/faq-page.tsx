@@ -186,11 +186,10 @@ Kamu juga bisa melihat status turnamen (pendaftaran dibuka/ditutup, sedang berla
     answer: `Sistem poin Tarkam IDM memberikan poin berdasarkan performa di setiap turnamen:
 
 <ul class="list-disc pl-5 mt-2 space-y-1">
-<li><strong>Menang pertandingan</strong> — Mendapat poin sesuai ronde (semakin jauh, poin semakin besar)</li>
-<li><strong>Juara 1</strong> — Poin terbanyak</li>
-<li><strong>Juara 2 & 3</strong> — Poin tambahan</li>
-<li><strong>MVP</strong> — Bonus poin untuk pemain terbaik pertandingan</li>
-<li><strong>Streak</strong> — Bonus poin untuk kemenangan berturut-turut</li>
+<li><strong>Menang pertandingan</strong> — Mendapat +1 poin permatch (semakin jauh, poin semakin besar)</li>
+<li><strong>Juara 1, 2 & 3</strong> — Berdasarkan total prizepool</li>
+<li><strong>MVP</strong> — Berdasarkan prizepool.</li>
+<li><strong>Streak</strong> — Bonus +2 poin untuk kemenangan 3x berturut-turut</li>
 </ul>
 
 Poin terakumulasi sepanjang musim dan menentukan peringkat musiman kamu.`,
