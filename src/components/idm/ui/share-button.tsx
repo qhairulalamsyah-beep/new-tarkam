@@ -50,7 +50,7 @@ export function ShareButton({ title, description, url, variant = 'button', class
       <div className="flex items-center gap-1">
         <button
           onClick={nativeShare}
-          className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors inline-flex items-center gap-1.5"
+          className="compact-dot p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors inline-flex items-center gap-1.5"
           title="Bagikan"
         >
           <Share2 className="w-4 h-4" />
@@ -64,7 +64,7 @@ export function ShareButton({ title, description, url, variant = 'button', class
     <div className={`flex items-center gap-1.5 ${className}`}>
       <button
         onClick={shareToWhatsApp}
-        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold bg-[#25D366]/15 text-[#25D366] hover:bg-[#25D366]/25 transition-colors min-h-[32px]"
+        className="compact-dot flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold bg-[#25D366]/15 text-[#25D366] hover:bg-[#25D366]/25 transition-colors min-h-[32px]"
         title="Bagikan ke WhatsApp"
       >
         <MessageCircle className="w-3.5 h-3.5" />
@@ -72,7 +72,7 @@ export function ShareButton({ title, description, url, variant = 'button', class
       </button>
       <button
         onClick={copyLink}
-        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold bg-muted/60 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors min-h-[32px]"
+        className="compact-dot flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold bg-muted/60 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors min-h-[32px]"
         title="Salin link"
       >
         {copied ? <Check className="w-3.5 h-3.5 text-green-500" /> : <Copy className="w-3.5 h-3.5" />}

@@ -172,7 +172,7 @@ export function SharePopup({
     <div className="relative">
       <button
         onClick={handleClick}
-        className={`inline-flex items-center justify-center gap-1 rounded-lg transition-all duration-200 cursor-pointer ${
+        className={`compact-dot inline-flex items-center justify-center gap-1 rounded-lg transition-all duration-200 cursor-pointer ${
           isSm ? 'w-7 h-7' : 'h-9 px-2.5'
         } ${
           copied
