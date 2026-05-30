@@ -501,7 +501,7 @@ export function GlobalSearchTrigger({
   return (
     <button
       onClick={onClick}
-      className={`btn-press inline-flex items-center gap-1.5 h-7 sm:h-8 px-2 sm:px-2.5 rounded-full text-[11px] sm:text-xs transition-all duration-200 cursor-pointer border active:scale-95 shrink-0 ${
+      className={`btn-press compact-dot inline-flex items-center gap-1.5 h-7 sm:h-8 px-2 sm:px-2.5 rounded-full text-[11px] sm:text-xs transition-all duration-200 cursor-pointer border active:scale-95 shrink-0 ${
         scrolled
           ? 'border-idm-gold-warm/15 bg-idm-gold-warm/5 hover:bg-idm-gold-warm/10 text-idm-gold-warm/70 hover:text-idm-gold-warm'
           : 'border-foreground/10 bg-foreground/5 hover:bg-foreground/10 text-foreground/50 hover:text-foreground/80 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10 dark:text-white/50 dark:hover:text-white/80'
