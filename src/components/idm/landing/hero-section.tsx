@@ -337,7 +337,7 @@ export function HeroSection({
 
             {/* ── CTA Buttons ── */}
             <div className="flex items-center justify-center gap-3 sm:gap-6">
-              {/* Daftar Tarkam */}
+              {/* Daftar */}
               <button
                 onClick={() => onRegister('male')}
                 className="btn-press hero-cta-breath hero-cta-pulse-enhanced group relative cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-idm-gold-warm/50 focus-visible:ring-offset-2 focus-visible:ring-offset-deep rounded-xl sm:rounded-2xl p-[1.5px] overflow-hidden shrink-0"
@@ -357,7 +357,7 @@ export function HeroSection({
                 >
                   <div className="hero-cta-shimmer-sweep" aria-hidden="true" />
                   <PenLine className="w-3 h-3 sm:w-3.5 sm:h-3.5 relative z-10" />
-                  <span className="relative z-10">Daftar Tarkam</span>
+                  <span className="relative z-10">Daftar</span>
                 </div>
               </button>
 
