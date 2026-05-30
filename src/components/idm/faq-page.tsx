@@ -80,9 +80,8 @@ Setiap divisi memiliki bracket, peringkat, dan hadiah masing-masing. Pemain hany
     answer: `Cara mendaftar turnamen Tarkam IDM:
 <ol class="list-decimal pl-5 mt-2 space-y-1">
 <li>Klik tombol <strong>"Daftar"</strong> di halaman utama atau halaman turnamen</li>
-<li>Isi form pendaftaran dengan data diri kamu (nama, gamertag, divisi)</li>
-<li>Centang opsi "Buat akun" jika belum punya akun, lalu buat password</li>
-<li>Setelah terdaftar, kamu akan masuk ke bracket turnamen</li>
+<li>Isi form pendaftaran dengan data diri kamu (nama, nickname, divisi, no whatsapp, kota)</li>
+<li>Admin akan approve permintaan anda dan akun akan tersedia dengan password 6digit terakhir no whatsapp.</li>
 </ol>
 
 Pastikan mendaftar sebelum batas waktu pendaftaran ditutup! Status pendaftaran bisa dilihat di halaman Kalender Turnamen.`,
