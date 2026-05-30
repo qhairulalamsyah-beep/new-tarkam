@@ -344,6 +344,18 @@ export function LandingPage() {
 
   /* Global Search State */
   const [searchOpen, setSearchOpen] = useState(false);
+  const [fabOpen, setFabOpen] = useState(false);
+
+  // Close FAB when clicking outside
+  useEffect(() => {
+    if (!fabOpen) return;
+    const handler = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest('.fab-menu-container')) setFabOpen(false);
+    };
+    document.addEventListener('click', handler);
+    return () => document.removeEventListener('click', handler);
+  }, [fabOpen]);
 
   /* Mobile performance: defer non-critical queries on small screens */
   // ★ FIX: Reduced mobile delay from 2000ms → 500ms. The 2s delay was too aggressive —
@@ -755,10 +767,9 @@ export function LandingPage() {
             {[
               { view: 'landing' as AppView, label: 'Beranda', icon: Home, special: false },
               { view: 'hasil' as AppView, label: 'Hasil', icon: Swords, special: false },
+              { view: 'bracket' as AppView, label: 'Bracket', icon: GitBranch, special: false },
               { view: 'highlights' as AppView, label: 'Juara', icon: Crown, special: true },
               { view: 'peringkat' as AppView, label: 'Peringkat', icon: Award, special: false },
-              { view: 'calendar' as AppView, label: 'Kalender', icon: Calendar, special: false },
-              { view: 'faq' as AppView, label: 'Bantuan', icon: HelpCircle, special: false },
             ].map(item => {
               const isActive = currentView === item.view;
 
@@ -808,16 +819,43 @@ export function LandingPage() {
         </div>
       </nav>
 
-      {/* ========== PEMAIN FAB (Mobile) ========== — hidden on Players view */}
-      {currentView === 'landing' && (
+      {/* ========== EXPANDABLE FAB (Mobile) ========== — Pemain, Kalender, Bantuan */}
+      <div className="fab-menu-container md:hidden fixed right-4 bottom-24 z-40 flex flex-col items-end gap-2">
+        {/* Expanded menu items */}
+        {fabOpen && (
+          <>
+            <button
+              onClick={() => { setCurrentView('players'); setFabOpen(false); window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior }); }}
+              className="flex items-center gap-2 px-3 py-2 rounded-full shadow-lg bg-background/95 backdrop-blur-sm border border-idm-gold-warm/20 text-sm font-medium text-foreground hover:bg-idm-gold-warm/10 transition-all duration-200 cursor-pointer active:scale-95"
+            >
+              <User className="w-4 h-4 text-idm-gold-warm" />
+              <span>Pemain</span>
+            </button>
+            <button
+              onClick={() => { setCurrentView('calendar'); setFabOpen(false); window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior }); }}
+              className="flex items-center gap-2 px-3 py-2 rounded-full shadow-lg bg-background/95 backdrop-blur-sm border border-idm-gold-warm/20 text-sm font-medium text-foreground hover:bg-idm-gold-warm/10 transition-all duration-200 cursor-pointer active:scale-95"
+            >
+              <Calendar className="w-4 h-4 text-idm-gold-warm" />
+              <span>Kalender</span>
+            </button>
+            <button
+              onClick={() => { setCurrentView('faq'); setFabOpen(false); window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior }); }}
+              className="flex items-center gap-2 px-3 py-2 rounded-full shadow-lg bg-background/95 backdrop-blur-sm border border-idm-gold-warm/20 text-sm font-medium text-foreground hover:bg-idm-gold-warm/10 transition-all duration-200 cursor-pointer active:scale-95"
+            >
+              <HelpCircle className="w-4 h-4 text-idm-gold-warm" />
+              <span>Bantuan</span>
+            </button>
+          </>
+        )}
+        {/* FAB trigger */}
         <button
-          onClick={() => { setCurrentView('players'); window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior }); }}
-          className={`md:hidden fixed right-4 bottom-24 z-40 w-12 h-12 rounded-full shadow-lg flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer bg-idm-gold-warm/90 shadow-idm-gold-warm/30`}
-          title="Pemain"
+          onClick={() => setFabOpen(!fabOpen)}
+          className={`w-12 h-12 rounded-full shadow-lg flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer bg-idm-gold-warm/90 shadow-idm-gold-warm/30 ${fabOpen ? 'rotate-45' : ''}`}
+          title="Menu lainnya"
         >
-          <span className="text-lg">👥</span>
+          <span className="text-lg">{fabOpen ? '✕' : '⋯'}</span>
         </button>
-      )}
+      </div>
 
       {/* ========== SECTION COMPONENTS ========== */}
       <HeroSection
