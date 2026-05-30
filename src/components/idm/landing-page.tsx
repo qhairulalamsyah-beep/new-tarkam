@@ -7,7 +7,7 @@ import { useCrossTabInvalidation } from '@/lib/cross-tab-sync';
 import { smartRefetchInterval } from '@/lib/smart-polling';
 
 import Image from 'next/image';
-import { Crown, Swords, LogIn, UserCircle, LogOut, Shield, Sun, Moon, Award, Home, Target, GitBranch, User, BookOpen, HelpCircle } from 'lucide-react';
+import { Crown, Swords, LogIn, UserCircle, LogOut, Shield, Sun, Moon, Award, Home, Target, GitBranch, User, BookOpen, HelpCircle, Calendar } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { useSyncExternalStore, useState, useEffect, useCallback, useRef } from 'react';
 import { PublicNotifBell } from './ui/public-notif-bell';
