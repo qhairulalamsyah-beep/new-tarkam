@@ -153,7 +153,102 @@ export function TournamentPrizeSection() {
     }
   }
   
-  if (allTournamentsWithPrizes.length === 0) return null;
+  if (allTournamentsWithPrizes.length === 0) {
+    return (
+      <AnimatedSection>
+        <section className="landing-section relative py-6 sm:py-12 px-4 sm:px-6 lg:px-8 overflow-hidden bg-deep border-y border-border/30 dark:border-0">
+          {/* Background — dot pattern */}
+          <div className="absolute inset-0 opacity-[0.02] pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle, rgba(239,249,35,0.5) 1px, transparent 1px)', backgroundSize: '28px 28px' }} />
+          {/* Radial glow */}
+          <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at 50% 30%, rgba(239,249,35,0.03) 0%, transparent 55%)' }} />
+
+          <SectionHeader
+            label="Prize Pool"
+            title="Hadiah Turnamen"
+            subtitle="Distribusi hadiah akan tersedia saat turnamen dimulai"
+            icon={Trophy}
+          />
+
+          {/* Ghost Empty State — Prize Pool */}
+          <div className="mt-6 max-w-5xl mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+              {/* Male Division Ghost */}
+              <div className="relative rounded-2xl border border-dashed border-idm-gold-warm/15 bg-idm-gold-warm/[0.02] overflow-hidden">
+                {/* Shimmer overlay */}
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-idm-gold-warm/[0.03] to-transparent animate-pulse" />
+                <div className="relative p-4 sm:p-6 space-y-4">
+                  {/* Header skeleton */}
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 rounded-full bg-idm-gold-warm/10 animate-pulse" />
+                    <div className="h-4 w-32 rounded bg-idm-gold-warm/10 animate-pulse" />
+                  </div>
+                  {/* Total pool skeleton */}
+                  <div className="flex items-center gap-3 p-3 rounded-xl bg-idm-gold-warm/[0.03] border border-idm-gold-warm/10">
+                    <Coins className="w-5 h-5 text-idm-gold-warm/20 shrink-0" />
+                    <div className="space-y-1.5 flex-1">
+                      <div className="h-2.5 w-20 rounded bg-idm-gold-warm/10 animate-pulse" />
+                      <div className="h-4 w-28 rounded bg-idm-gold-warm/10 animate-pulse" />
+                    </div>
+                  </div>
+                  {/* Prize rows skeleton */}
+                  {[1, 2, 3].map(pos => (
+                    <div key={pos} className="flex items-center gap-3 p-3 rounded-xl bg-background/40 border border-border/20">
+                      <span className="text-xl opacity-20">{pos === 1 ? '🥇' : pos === 2 ? '🥈' : '🥉'}</span>
+                      <div className="flex-1 space-y-1.5">
+                        <div className="h-3 w-24 rounded bg-idm-gold-warm/10 animate-pulse" style={{ animationDelay: `${pos * 200}ms` }} />
+                        <div className="h-2.5 w-16 rounded bg-idm-gold-warm/8 animate-pulse" style={{ animationDelay: `${pos * 200 + 100}ms` }} />
+                      </div>
+                      <div className="w-10 h-1.5 rounded-full bg-idm-gold-warm/10" />
+                    </div>
+                  ))}
+                </div>
+                {/* Coming soon badge */}
+                <div className="absolute top-3 right-3">
+                  <span className="text-[9px] font-bold uppercase tracking-widest text-idm-gold-warm/40 px-2 py-0.5 rounded-full border border-idm-gold-warm/15 bg-idm-gold-warm/[0.03]">Segera</span>
+                </div>
+              </div>
+
+              {/* Female Division Ghost */}
+              <div className="relative rounded-2xl border border-dashed border-idm-gold-warm/15 bg-idm-gold-warm/[0.02] overflow-hidden">
+                {/* Shimmer overlay */}
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-idm-gold-warm/[0.03] to-transparent animate-pulse" />
+                <div className="relative p-4 sm:p-6 space-y-4">
+                  {/* Header skeleton */}
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 rounded-full bg-idm-gold-warm/10 animate-pulse" />
+                    <div className="h-4 w-32 rounded bg-idm-gold-warm/10 animate-pulse" />
+                  </div>
+                  {/* Total pool skeleton */}
+                  <div className="flex items-center gap-3 p-3 rounded-xl bg-idm-gold-warm/[0.03] border border-idm-gold-warm/10">
+                    <Coins className="w-5 h-5 text-idm-gold-warm/20 shrink-0" />
+                    <div className="space-y-1.5 flex-1">
+                      <div className="h-2.5 w-20 rounded bg-idm-gold-warm/10 animate-pulse" />
+                      <div className="h-4 w-28 rounded bg-idm-gold-warm/10 animate-pulse" />
+                    </div>
+                  </div>
+                  {/* Prize rows skeleton */}
+                  {[1, 2, 3].map(pos => (
+                    <div key={pos} className="flex items-center gap-3 p-3 rounded-xl bg-background/40 border border-border/20">
+                      <span className="text-xl opacity-20">{pos === 1 ? '🥇' : pos === 2 ? '🥈' : '🥉'}</span>
+                      <div className="flex-1 space-y-1.5">
+                        <div className="h-3 w-24 rounded bg-idm-gold-warm/10 animate-pulse" style={{ animationDelay: `${pos * 200}ms` }} />
+                        <div className="h-2.5 w-16 rounded bg-idm-gold-warm/8 animate-pulse" style={{ animationDelay: `${pos * 200 + 100}ms` }} />
+                      </div>
+                      <div className="w-10 h-1.5 rounded-full bg-idm-gold-warm/10" />
+                    </div>
+                  ))}
+                </div>
+                {/* Coming soon badge */}
+                <div className="absolute top-3 right-3">
+                  <span className="text-[9px] font-bold uppercase tracking-widest text-idm-gold-warm/40 px-2 py-0.5 rounded-full border border-idm-gold-warm/15 bg-idm-gold-warm/[0.03]">Segera</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </AnimatedSection>
+    );
+  }
 
   // Find the latest week that has prizes — if current week has no prizes yet, fallback to previous
   const latestWeek = Math.max(...allTournamentsWithPrizes.map(t => t.weekNumber));
