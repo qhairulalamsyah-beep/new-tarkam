@@ -58,6 +58,7 @@ interface MvpInfo {
 }
 
 interface TimelineEvent {
+  id?: string;
   order: number;
   playerId: string;
   amount: number;

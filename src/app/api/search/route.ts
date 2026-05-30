@@ -41,7 +41,8 @@ export async function GET(request: NextRequest) {
   });
 
   // Search Clubs — by profile name (contains)
-  const clubs = await db.clubProfile.findMany({
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const clubs: any = await db.clubProfile.findMany({
     where: {
       name: { contains: q },
     },
@@ -52,7 +53,7 @@ export async function GET(request: NextRequest) {
       },
       seasonEntries: {
         take: 1,
-        orderBy: { createdAt: 'desc' },
+        orderBy: { points: 'desc' } as const,
         select: {
           division: true,
           wins: true,

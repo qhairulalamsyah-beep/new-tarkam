@@ -372,7 +372,7 @@ export function PlayerPerformanceCharts({ playerId, playerDivision }: PlayerPerf
                     tickFormatter={(v: number) => `#${v}`}
                   />
                   <ChartTooltip
-                    content={<ChartTooltipContent formatter={(value: number) => `#${value}`} />}
+                    content={<ChartTooltipContent formatter={(value) => `#${value}`} />}
                   />
                   <Line
                     type="monotone"

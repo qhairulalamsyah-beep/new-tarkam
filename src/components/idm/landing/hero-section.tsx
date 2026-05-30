@@ -3,7 +3,7 @@
 import { useState, useEffect, useSyncExternalStore } from 'react';
 import Image from 'next/image';
 import { createPortal } from 'react-dom';
-import { Star, LogIn, ArrowRight, Users, Trophy, Swords, PenLine, X, Music } from 'lucide-react';
+import { Star, LogIn, ArrowRight, Users, Trophy, Swords, PenLine, X, Music, Eye } from 'lucide-react';
 import { AvatarMedia } from '@/components/ui/avatar-media';
 import { ClubLogoImage } from '@/components/idm/club-logo-image';
 import { getAvatarUrl } from '@/lib/utils';

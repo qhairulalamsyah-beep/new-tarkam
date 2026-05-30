@@ -214,7 +214,7 @@ export function PublicNotifBell({ scrolled }: { scrolled: boolean }) {
       let subscription = await registration.pushManager.getSubscription();
 
       if (!subscription) {
-        const applicationServerKey = urlBase64ToUint8Array(vapidPublicKey);
+        const applicationServerKey = urlBase64ToUint8Array(vapidPublicKey) as unknown as BufferSource;
         subscription = await registration.pushManager.subscribe({
           userVisibleOnly: true,
           applicationServerKey,

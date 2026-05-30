@@ -58,8 +58,8 @@ export async function GET(request: Request) {
     ];
 
     // Find current tier
-    let currentTier = tiers[0];
-    let nextTier = tiers[1];
+    let currentTier: typeof tiers[number] = tiers[0];
+    let nextTier: typeof tiers[number] | null = tiers[1];
     for (let i = tiers.length - 1; i >= 0; i--) {
       if (registered >= tiers[i].required) {
         currentTier = tiers[i];
