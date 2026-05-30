@@ -716,6 +716,17 @@ export function LandingPage() {
             <LandingThemeToggle scrolled={scrolled} />
             {/* Notification Bell */}
             <PublicNotifBell scrolled={scrolled} />
+            {/* Admin Shield — always visible, opens admin login */}
+            <button
+              onClick={() => { setLoginDefaultTab('admin'); setLoginModalOpen(true); }}
+              aria-label="Admin login"
+              className={`btn-press compact-dot md:hidden p-1 rounded-md transition-all duration-200 cursor-pointer opacity-60 hover:opacity-100 ${
+                scrolled ? 'text-idm-gold-warm/70 hover:text-idm-gold-warm' : 'text-foreground/50 hover:text-foreground/90 dark:text-white/50 dark:hover:text-white/90'
+              }`}
+              title="Login Admin"
+            >
+              <Shield className="w-4 h-4 text-idm-gold-warm drop-shadow-[0_0_4px_rgba(239,249,35,0.4)]" />
+            </button>
             {/* Login / User Button — hidden on mobile, use hero CTA instead */}
             <div className="hidden md:block">
             <LandingAuthButton
