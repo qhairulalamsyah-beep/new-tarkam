@@ -230,12 +230,12 @@ function MonthCalendarGrid({
                 <div className="flex flex-col items-center gap-0.5 mt-0.5 w-full px-0.5 overflow-hidden">
                   {hasMale && maleWeeks.length > 0 && (
                     <div className="flex items-center gap-0.5 bg-idm-male/15 text-idm-male-light border border-idm-male/20 rounded px-1 py-px w-full justify-center">
-                      <span className="text-[7px] sm:text-[8px] font-bold leading-none truncate">♂ W{maleWeeks.join(',')}</span>
+                      <span className="text-[7px] sm:text-[8px] font-bold leading-none truncate">Cowo W{maleWeeks.join(',')}</span>
                     </div>
                   )}
                   {hasFemale && femaleWeeks.length > 0 && (
                     <div className="flex items-center gap-0.5 bg-idm-female/15 text-idm-female-light border border-idm-female/20 rounded px-1 py-px w-full justify-center">
-                      <span className="text-[7px] sm:text-[8px] font-bold leading-none truncate">♀ W{femaleWeeks.join(',')}</span>
+                      <span className="text-[7px] sm:text-[8px] font-bold leading-none truncate">Cewe W{femaleWeeks.join(',')}</span>
                     </div>
                   )}
                 </div>
@@ -259,7 +259,7 @@ function TournamentCard({ tournament }: { tournament: CalendarTournament }) {
   const divColors = getDivisionColor(tournament.division);
   const regBadge = getRegistrationBadge(tournament.registrationStatus);
   const DivisionIcon = tournament.division === 'male' ? Music : Shield;
-  const divisionLabel = tournament.division === 'male' ? '♂ Cowo' : '♀ Cewe';
+  const divisionLabel = tournament.division === 'male' ? 'Cowo' : 'Cewe';
 
   const targetDate = tournament.startAt || tournament.scheduledAt;
   const isUpcoming = targetDate && new Date(targetDate).getTime() > Date.now();
@@ -502,8 +502,8 @@ export function CalendarPage() {
         <div className="flex items-center gap-1 p-1 rounded-lg bg-idm-gold-warm/5 border border-idm-gold-warm/10 w-fit">
           {([
             { key: 'all' as DivisionFilter, label: 'Semua' },
-            { key: 'male' as DivisionFilter, label: '♂ Cowo' },
-            { key: 'female' as DivisionFilter, label: '♀ Cewe' },
+            { key: 'male' as DivisionFilter, label: 'Cowo' },
+            { key: 'female' as DivisionFilter, label: 'Cewe' },
           ]).map(div => (
             <button
               key={div.key}
@@ -581,11 +581,11 @@ export function CalendarPage() {
               <div className="flex items-center gap-4 px-4 pb-3 pt-1 border-t border-idm-gold-warm/5">
                 <div className="flex items-center gap-1">
                   <div className="w-2 h-2 rounded-full bg-idm-male/80" />
-                  <span className="text-[9px] text-muted-foreground/60">♂ Cowo</span>
+                  <span className="text-[9px] text-muted-foreground/60">Cowo</span>
                 </div>
                 <div className="flex items-center gap-1">
                   <div className="w-2 h-2 rounded-full bg-idm-female/80" />
-                  <span className="text-[9px] text-muted-foreground/60">♀ Cewe</span>
+                  <span className="text-[9px] text-muted-foreground/60">Cewe</span>
                 </div>
                 <div className="flex items-center gap-1">
                   <div className="w-1 h-1 rounded-full bg-idm-gold-warm" />
