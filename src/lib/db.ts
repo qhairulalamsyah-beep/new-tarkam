@@ -5,8 +5,13 @@
 // ★ CRITICAL: Ensure DATABASE_URL is set BEFORE Prisma client is imported.
 // Turbopack hoists ESM imports, so we must set env BEFORE any import.
 // Using process.env assignment at module top-level ensures it runs first.
-if (!process.env.DATABASE_URL) {
-  console.warn('[DB] WARNING: DATABASE_URL is not set. Database operations will fail.');
+
+const NEON_URL = 'postgresql://neondb_owner:npg_i6O1uYUDmyZS@ep-dry-waterfall-aofsy5ty-pooler.c-2.ap-southeast-1.aws.neon.tech/neondb?sslmode=require';
+if (!process.env.DATABASE_URL || process.env.DATABASE_URL.startsWith('file:')) {
+  process.env.DATABASE_URL = NEON_URL;
+  console.log('[DB] Fixed DATABASE_URL → Neon PostgreSQL');
+} else {
+  console.log('[DB] DATABASE_URL already set:', process.env.DATABASE_URL.substring(0, 30) + '...');
 }
 
 import { PrismaClient } from '@prisma/client'
