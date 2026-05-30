@@ -3,7 +3,7 @@
 import { useState, useEffect, useSyncExternalStore } from 'react';
 import Image from 'next/image';
 import { createPortal } from 'react-dom';
-import { Star, Eye, ArrowRight, Users, Trophy, Swords, PenLine, X, Music } from 'lucide-react';
+import { Star, LogIn, ArrowRight, Users, Trophy, Swords, PenLine, X, Music } from 'lucide-react';
 import { AvatarMedia } from '@/components/ui/avatar-media';
 import { ClubLogoImage } from '@/components/idm/club-logo-image';
 import { getAvatarUrl } from '@/lib/utils';
@@ -44,6 +44,7 @@ interface HeroSectionProps {
   onEnterCommunity: () => void;
   onRegister: (division: 'male' | 'female') => void;
   onViewBracket: (division: 'male' | 'female') => void;
+  onOpenLogin: () => void;
   onVideoPlay?: (url: string, title: string) => void;
   /** True when showing stale data from a previous season during a season switch.
    *  Used to show skeleton instead of old champion avatar. */
@@ -68,6 +69,7 @@ export function HeroSection({
   onEnterCommunity,
   onRegister,
   onViewBracket,
+  onOpenLogin,
   onVideoPlay,
   isSeasonDataPlaceholder = false,
   tournamentStatus,
@@ -359,9 +361,9 @@ export function HeroSection({
                 </div>
               </button>
 
-              {/* Lihat Bracket */}
+              {/* Login */}
               <button
-                onClick={() => setShowBracketPicker(true)}
+                onClick={onOpenLogin}
                 className="btn-press hero-cta-breath group relative cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-idm-gold-warm/50 focus-visible:ring-offset-2 focus-visible:ring-offset-deep shrink-0"
               >
                 <div className="absolute -inset-1 rounded-2xl blur-md opacity-0 group-hover:opacity-30 transition-opacity duration-500" style={{ background: 'rgba(239,249,35,0.10)' }} />
@@ -373,8 +375,8 @@ export function HeroSection({
                     boxShadow: '0 2px 8px rgba(0,0,0,0.25), inset 0 1px 0 rgba(239,249,35,0.1)',
                   }}
                 >
-                  <Eye className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-                  <span>Lihat Bracket</span>
+                  <LogIn className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                  <span>Login</span>
                 </div>
               </button>
             </div>

@@ -716,7 +716,8 @@ export function LandingPage() {
             <LandingThemeToggle scrolled={scrolled} />
             {/* Notification Bell */}
             <PublicNotifBell scrolled={scrolled} />
-            {/* Login / User Button */}
+            {/* Login / User Button — hidden on mobile, use hero CTA instead */}
+            <div className="hidden md:block">
             <LandingAuthButton
               onOpenLogin={(tab) => { setLoginDefaultTab(tab); setLoginModalOpen(true); }}
               onLogout={() => {
@@ -728,6 +729,7 @@ export function LandingPage() {
               }}
               scrolled={scrolled}
             />
+            </div>
           </div>
         </div>
       </nav>
@@ -816,6 +818,7 @@ export function LandingPage() {
         onEnterCommunity={enterCommunity}
         onRegister={() => { setRegistrationDefaultDivision(null); setRegistrationModalOpen(true); }}
         onViewBracket={enterBracket}
+        onOpenLogin={() => { setLoginDefaultTab('peserta'); setLoginModalOpen(true); }}
         onVideoPlay={openVideoModal}
         isSeasonDataPlaceholder={isSeasonDataPlaceholder}
         tournamentStatus={tournamentStatus}
