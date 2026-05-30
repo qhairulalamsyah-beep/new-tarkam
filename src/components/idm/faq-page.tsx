@@ -263,16 +263,8 @@ Peringkat diperbarui secara real-time setelah setiap pertandingan selesai. Kamu 
     answer: `Hadiah di Tarkam IDM berasal dari dua sumber:
 
 <ul class="list-disc pl-5 mt-2 space-y-1">
-<li><strong>Hadiah Turnamen</strong> — Disediakan untuk juara 1, 2, dan 3 setiap turnamen mingguan</li>
+<li><strong>Hadiah Turnamen</strong> — Disediakan untuk juara 1, 2, 3 dan MVP setiap turnamen mingguan</li>
 <li><strong>Hadiah Sponsor</strong> — Hadiah tambahan dari sponsor/donatur yang menambah prize pool</li>
-</ul>
-
-Jenis hadiah bisa berupa:
-<ul class="list-disc pl-5 mt-2 space-y-1">
-<li>Saldo e-wallet (GoPay, OVO, Dana, dll.)</li>
-<li>Voucher gaming atau digital</li>
-<li>Produk fisik dari sponsor</li>
-<li>Badge eksklusif di platform</li>
 </ul>
 
 Jumlah hadiah bervariasi per turnamen — cek halaman turnamen untuk detailnya.`,
